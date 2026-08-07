@@ -3,6 +3,7 @@
 ## System Architecture Summary
 - **Architecture Standard**: Clean Architecture (Domain -> Application -> Infrastructure -> Gateway/Server)
 - **Framework**: .NET 10.0 / C# 13, PostgreSQL, Redis, SignalR / WebSockets, Unity 2D/3D Client
+- **GitHub Repository (Live)**: [`https://github.com/kurtadam-tmp/MMORPG-Test-Project`](https://github.com/kurtadam-tmp/MMORPG-Test-Project)
 - **Production Deployment Assets**:
   - `docker-compose.yml`: Multi-container orchestration (PostgreSQL 16, Redis 7.2, GatewayApi, MasterServer)
   - `init-db.sql`: Production PostgreSQL schema initializer (Players, Characters, Inventories tables and indexes)
