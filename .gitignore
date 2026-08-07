@@ -1,0 +1,29 @@
+# .gitignore for MMORPG Test Project (.NET + Unity)
+
+# .NET Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+# Unity Build outputs & Temp files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+*.csproj
+*.unityproj
+*.sln
+*.userprefs
+
+# OS & Temporary scripts
+.DS_Store
+Thumbs.db
+ssh_runner.py
+ssh_probe.py

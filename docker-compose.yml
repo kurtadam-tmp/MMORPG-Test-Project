@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mmorpg-db:
+    image: postgres:16-alpine
+    container_name: mmorpg_postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: mmorpg_prod
+      POSTGRES_USER: mmorpg_user
+      POSTGRES_PASSWORD: SecureMmorpgPassword2026!
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mmorpg_user -d mmorpg_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mmorpg-redis:
+    image: redis:7.2-alpine
+    container_name: mmorpg_redis_cache
+    restart: always
+    command: redis-server --save 60 1 --loglevel notice
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mmorpg-gateway-api:
+    build:
+      context: .
+      dockerfile: src/MMORPG.GatewayApi/Dockerfile
+    container_name: mmorpg_gateway_api
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgreSQL=Host=mmorpg-db;Port=5432;Database=mmorpg_prod;Username=mmorpg_user;Password=SecureMmorpgPassword2026!
+      - ConnectionStrings__Redis=mmorpg-redis:6379
+    depends_on:
+      mmorpg-db:
+        condition: service_healthy
+      mmorpg-redis:
+        condition: service_healthy
+
+  mmorpg-master-server:
+    build:
+      context: .
+      dockerfile: src/MMORPG.MasterServer/Dockerfile
+    container_name: mmorpg_master_server
+    restart: always
+    ports:
+      - "7000:7000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Redis=mmorpg-redis:6379
+    depends_on:
+      mmorpg-redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:

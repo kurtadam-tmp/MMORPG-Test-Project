@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="../tests/MMORPG.Tests/MMORPG.Tests.csproj" />
+  <Project Path="MMORPG.ClientSim/MMORPG.ClientSim.csproj" />
+  <Project Path="MMORPG.Domain/MMORPG.Domain.csproj" />
+  <Project Path="MMORPG.GatewayApi/MMORPG.GatewayApi.csproj" />
+  <Project Path="MMORPG.Infrastructure/MMORPG.Infrastructure.csproj" />
+  <Project Path="MMORPG.MasterServer/MMORPG.MasterServer.csproj" />
+  <Project Path="MMORPG.Server/MMORPG.Server.csproj" />
+  <Project Path="MMORPG.Shared/MMORPG.Shared.csproj" />
+</Solution>
