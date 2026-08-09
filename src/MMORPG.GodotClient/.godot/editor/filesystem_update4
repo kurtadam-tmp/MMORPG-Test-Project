@@ -7,3 +7,4 @@ res://Scripts/Visuals/GodotBossVisualizer.cs
 res://Scripts/Network/MMORPGGodotClient.cs
 res://Scripts/Visuals/GodotZonePortalVisualizer.cs
 res://Scenes/MainWorld.tscn
+res://Scripts/Visuals/TreeOfSaviorPaperdollEngine.cs
