@@ -30,20 +30,24 @@ public partial class GodotPaperdollVisualizer : Node3D
     private const int TotalWalkFrames = 6;
     private const float FrameRate = 0.10f; // 10 FPS walk cycle animation
 
-    // Footstep Vector Offsets for each of the 6 walk frames (X, Y, Z displacement)
-    private static readonly Vector3[] FootStepOffsets = new Vector3[]
-    {
-        new Vector3(0.00f, 0.00f, 0.00f),   // Frame 0: Resting Stand
-        new Vector3(-0.03f, 0.03f, 0.03f),  // Frame 1: Left Foot Forward Step
-        new Vector3(-0.05f, 0.06f, 0.05f),  // Frame 2: Left Foot Peak Lift Step
-        new Vector3(0.00f, 0.01f, 0.00f),   // Frame 3: Mid-stride Neutral
-        new Vector3(0.03f, 0.03f, -0.03f),  // Frame 4: Right Foot Forward Step
-        new Vector3(0.05f, 0.06f, -0.05f)   // Frame 5: Right Foot Peak Lift Step
-    };
-
     // Preloaded Base Body Animation Textures: Direction -> FrameIndex -> Texture
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
+
+    // Base Y Position Offsets per Layer for Perfect Waist/Head Alignment
+    // BaseBody (92x92px) sits at 1.30f. 64x64px LPC layers sit at 1.48f for perfect hip alignment.
+    private static readonly Dictionary<string, Vector3> LayerBasePositions = new()
+    {
+        ["Shadow"]   = new Vector3(0.00f, 1.30f, 0f),
+        ["BaseBody"] = new Vector3(0.00f, 1.30f, 0f),
+        ["Boots"]    = new Vector3(0.00f, 1.48f, 0f),
+        ["Legs"]     = new Vector3(0.00f, 1.48f, 0f),
+        ["Chest"]    = new Vector3(0.00f, 1.48f, 0f),
+        ["Cape"]     = new Vector3(0.00f, 1.48f, 0f),
+        ["Head"]     = new Vector3(0.00f, 1.48f, 0f),
+        ["MainHand"] = new Vector3(0.00f, 1.48f, 0f),
+        ["OffHand"]  = new Vector3(0.00f, 1.48f, 0f)
+    };
 
     public override void _Ready()
     {
@@ -89,7 +93,16 @@ public partial class GodotPaperdollVisualizer : Node3D
         sprite.Name = $"PaperdollLayer_{layerKey}";
         sprite.PixelSize = pixelSize;
         sprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
-        sprite.Position = new Vector3(0f, 1.3f, 0f);
+        
+        if (LayerBasePositions.TryGetValue(layerKey, out var basePos))
+        {
+            sprite.Position = basePos;
+        }
+        else
+        {
+            sprite.Position = new Vector3(0f, 1.30f, 0f);
+        }
+
         AddChild(sprite);
         _layers[layerKey] = sprite;
         return sprite;
@@ -131,14 +144,14 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[8-Directional Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Paperdoll Alignment Engine] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[8-Directional Paperdoll Engine] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Paperdoll Alignment Engine] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
@@ -166,21 +179,17 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void SyncEquipmentAnimationFrames()
     {
-        Vector3 stepOffset = _isMoving ? FootStepOffsets[_currentWalkFrame] : Vector3.Zero;
+        // Torso/Waist Bobbing Alignment: Applies subtle 0.02f Y bobbing during walk steps
+        float walkBobY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.02f : 0f;
 
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
             if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
 
-            if (slot == EquipmentSlot.Boots || slot == EquipmentSlot.Legs)
+            if (LayerBasePositions.TryGetValue(layerKey, out var basePos))
             {
-                layerSprite.Position = new Vector3(stepOffset.X, 1.3f + stepOffset.Y, stepOffset.Z);
-            }
-            else
-            {
-                float torsoBobY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
-                layerSprite.Position = new Vector3(0f, 1.3f + torsoBobY, 0f);
+                layerSprite.Position = new Vector3(basePos.X, basePos.Y + walkBobY, basePos.Z);
             }
         }
     }
@@ -204,7 +213,6 @@ public partial class GodotPaperdollVisualizer : Node3D
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
-                // Explicit 8-Directional Texture Pattern Resolution
                 string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
                 Texture2D equipTex = GD.Load<Texture2D>(resPath);
 
