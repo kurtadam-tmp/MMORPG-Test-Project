@@ -22,7 +22,7 @@ class Program
         string clientRoot = @"C:\Projects\Antigravity\MMORPG-Test-Project\src\MMORPG.GodotClient\Assets\Textures";
         string lpcRoot = @"C:\Projects\Antigravity\tools\lpc_generator\spritesheets";
 
-        Console.WriteLine("[LPC Exporter] Beginning Composite LPC Base Body (Body + Head) & 5 Equipment Sets Extraction...");
+        Console.WriteLine("[LPC Exporter] Extracting clean single-body 8-directional sprite sets...");
 
         // 1. Extract Complete Composite LPC Base Body (Body Torso + Human Head)
         string bodyWalkSheet = Path.Combine(lpcRoot, @"body\bodies\male\walk.png");
@@ -63,7 +63,7 @@ class Program
             Extract8DirectionalEquipment(sheetPath, outFolder, itemRelativePath);
         }
 
-        Console.WriteLine("[LPC Exporter] ALL EXTRACTIONS COMPLETED SUCCESSFULLY!");
+        Console.WriteLine("[LPC Exporter] CLEAN SINGLE-BODY EXTRACTIONS COMPLETED!");
     }
 
     private static void ExtractCompositeBaseBodyWalkFrames(string bodySheetPath, string headSheetPath, string outBaseFolder)
@@ -86,7 +86,6 @@ class Program
                     {
                         using (Graphics g = Graphics.FromImage(frameImg))
                         {
-                            // Draw Body first, then Composite Head on top
                             g.DrawImage(bodySheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
                             g.DrawImage(headSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
                         }
@@ -98,11 +97,11 @@ class Program
             }
         }
 
-        // Synthesize 4 Diagonal Composite Base Body Directions
-        SynthesizeDiagonalWalkFrames(outBaseFolder, "east", "south", "south-east");
-        SynthesizeDiagonalWalkFrames(outBaseFolder, "east", "north", "north-east");
-        SynthesizeDiagonalWalkFrames(outBaseFolder, "west", "north", "north-west");
-        SynthesizeDiagonalWalkFrames(outBaseFolder, "west", "south", "south-west");
+        // Map Diagonal Base Body directions directly to nearest clean 1-body angle (NO double-blending!)
+        CopyDirWalkFrames(outBaseFolder, "east", "south-east");
+        CopyDirWalkFrames(outBaseFolder, "east", "north-east");
+        CopyDirWalkFrames(outBaseFolder, "west", "north-west");
+        CopyDirWalkFrames(outBaseFolder, "west", "south-west");
     }
 
     private static void ExtractCompositeBaseBodyIdleFrames(string bodySheetPath, string headSheetPath, string outBaseFolder)
@@ -132,10 +131,10 @@ class Program
             }
         }
 
-        SynthesizeDiagonalSingle(outBaseFolder, "east.png", "south.png", "south-east.png");
-        SynthesizeDiagonalSingle(outBaseFolder, "east.png", "north.png", "north-east.png");
-        SynthesizeDiagonalSingle(outBaseFolder, "west.png", "north.png", "north-west.png");
-        SynthesizeDiagonalSingle(outBaseFolder, "west.png", "south.png", "south-west.png");
+        CopySingleFile(outBaseFolder, "east.png", "south-east.png");
+        CopySingleFile(outBaseFolder, "east.png", "north-east.png");
+        CopySingleFile(outBaseFolder, "west.png", "north-west.png");
+        CopySingleFile(outBaseFolder, "west.png", "south-west.png");
     }
 
     private static void Extract8DirectionalEquipment(string sheetPath, string outFolder, string itemKey)
@@ -161,60 +160,40 @@ class Program
             }
         }
 
-        SynthesizeDiagonalSingle(outFolder, "east.png", "south.png", "south-east.png");
-        SynthesizeDiagonalSingle(outFolder, "east.png", "north.png", "north-east.png");
-        SynthesizeDiagonalSingle(outFolder, "west.png", "north.png", "north-west.png");
-        SynthesizeDiagonalSingle(outFolder, "west.png", "south.png", "south-west.png");
+        CopySingleFile(outFolder, "east.png", "south-east.png");
+        CopySingleFile(outFolder, "east.png", "north-east.png");
+        CopySingleFile(outFolder, "west.png", "north-west.png");
+        CopySingleFile(outFolder, "west.png", "south-west.png");
 
         Console.WriteLine($"[SUCCESS] Exported 8-directional set for '{itemKey}'");
     }
 
-    private static void SynthesizeDiagonalWalkFrames(string outBaseFolder, string d1, string d2, string targetDir)
+    private static void CopyDirWalkFrames(string outBaseFolder, string srcDir, string targetDir)
     {
-        string path1Folder = Path.Combine(outBaseFolder, d1);
-        string path2Folder = Path.Combine(outBaseFolder, d2);
+        string srcFolder = Path.Combine(outBaseFolder, srcDir);
         string targetFolder = Path.Combine(outBaseFolder, targetDir);
 
         Directory.CreateDirectory(targetFolder);
 
         for (int f = 0; f < 6; f++)
         {
-            string f1 = Path.Combine(path1Folder, $"frame_00{f}.png");
-            string f2 = Path.Combine(path2Folder, $"frame_00{f}.png");
-            string fTarget = Path.Combine(targetFolder, $"frame_00{f}.png");
-
-            SynthesizeDiagonalSingleFile(f1, f2, fTarget);
+            string srcFile = Path.Combine(srcFolder, $"frame_00{f}.png");
+            string targetFile = Path.Combine(targetFolder, $"frame_00{f}.png");
+            if (File.Exists(srcFile))
+            {
+                File.Copy(srcFile, targetFile, true);
+            }
         }
     }
 
-    private static void SynthesizeDiagonalSingle(string folder, string file1, string file2, string targetFile)
+    private static void CopySingleFile(string folder, string srcFile, string targetFile)
     {
-        string p1 = Path.Combine(folder, file1);
-        string p2 = Path.Combine(folder, file2);
+        string p1 = Path.Combine(folder, srcFile);
         string pTarget = Path.Combine(folder, targetFile);
 
-        SynthesizeDiagonalSingleFile(p1, p2, pTarget);
-    }
-
-    private static void SynthesizeDiagonalSingleFile(string p1, string p2, string pTarget)
-    {
-        if (File.Exists(p1) && File.Exists(p2))
+        if (File.Exists(p1))
         {
-            using (Bitmap img1 = new Bitmap(p1))
-            using (Bitmap img2 = new Bitmap(p2))
-            using (Bitmap outImg = new Bitmap(FrameSize, FrameSize, PixelFormat.Format32bppArgb))
-            {
-                for (int y = 0; y < FrameSize; y++)
-                {
-                    for (int x = 0; x < FrameSize; x++)
-                    {
-                        Color c1 = img1.GetPixel(x, y);
-                        Color c2 = img2.GetPixel(x, y);
-                        outImg.SetPixel(x, y, (c1.A > 0) ? c1 : c2);
-                    }
-                }
-                outImg.Save(pTarget, ImageFormat.Png);
-            }
+            File.Copy(p1, pTarget, true);
         }
     }
 }
