@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://mmorpg_world_scene_2026"]
+[gd_scene load_steps=13 format=3 uid="uid://ba2kbl6h6p0hu"]
 
 [ext_resource type="Script" path="res://Scripts/UI/MMORPGSceneAutoInitializer.cs" id="1_initializer"]
 [ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerVisualizer.cs" id="2_player"]
@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://Scripts/Visuals/GodotZonePortalVisualizer.cs" id="4_portal"]
 [ext_resource type="Script" path="res://Scripts/Network/MMORPGGodotClient.cs" id="5_net"]
 [ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="6_ui"]
-[ext_resource type="Texture2D" uid="uid://seamless_grass_tex" path="res://Assets/Textures/seamless_grass.jpg" id="7_grass_tex"]
+[ext_resource type="Texture2D" uid="uid://bhk4c7d8qodmp" path="res://Assets/Textures/seamless_grass.jpg" id="7_grass_tex"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.12, 0.22, 0.38, 1)
@@ -20,15 +20,14 @@ background_mode = 2
 sky = SubResource("Sky_env")
 ambient_light_source = 3
 ambient_light_color = Color(0.8, 0.85, 0.9, 1)
-ambient_light_energy = 1.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(60, 60)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_texture = ExtResource("7_grass_tex")
-uv1_scale = Vector3(10, 10, 10)
 roughness = 0.8
+uv1_scale = Vector3(10, 10, 10)
 
 [node name="MainWorld" type="Node3D"]
 
@@ -42,8 +41,8 @@ light_energy = 1.2
 
 [node name="MainCamera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 12, 14)
-fov = 60.0
 current = true
+fov = 60.0
 
 [node name="GroundPlane" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_ground")
