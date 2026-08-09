@@ -48,6 +48,9 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     public override void _Ready()
     {
+        // Extract open-source LPC paperdoll equipment layers on startup
+        LpcPaperdollEngine.ExtractLpcEquipmentSheets();
+
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
         CreateLayerNode("Shadow", 0.0210f);
         CreateLayerNode("BaseBody", 0.0220f);
@@ -165,7 +168,6 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void SyncEquipmentAnimationFrames()
     {
-        // Footstep Alignment Engine: Moves boots and legs matching exact foot step offsets per walk frame
         Vector3 stepOffset = _isMoving ? FootStepOffsets[_currentWalkFrame] : Vector3.Zero;
 
         foreach (var (slot, itemId) in _equippedItems)
@@ -175,78 +177,14 @@ public partial class GodotPaperdollVisualizer : Node3D
 
             if (slot == EquipmentSlot.Boots || slot == EquipmentSlot.Legs)
             {
-                // Move boots/leggings in 1-to-1 sync with footstep displacement
                 layerSprite.Position = new Vector3(stepOffset.X, 1.3f + stepOffset.Y, stepOffset.Z);
             }
             else
             {
-                // General torso/head bobbing
                 float torsoBobY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
                 layerSprite.Position = new Vector3(0f, 1.3f + torsoBobY, 0f);
             }
         }
-    }
-
-    private Texture2D LoadAndIsolateEquipmentTexture(string resPath, EquipmentSlot slot, string cacheKey)
-    {
-        if (_isolatedEquipCache.TryGetValue(cacheKey, out var cachedTex)) return cachedTex;
-
-        Texture2D rawTex = GD.Load<Texture2D>(resPath);
-        if (rawTex == null) return null!;
-
-        Image img = rawTex.GetImage();
-        if (img == null) return rawTex;
-
-        img = (Image)img.Duplicate();
-        int width = img.GetWidth();
-        int height = img.GetHeight();
-
-        for (int y = 0; y < height; y++)
-        {
-            float normY = y / (float)height;
-            for (int x = 0; x < width; x++)
-            {
-                Color pixel = img.GetPixel(x, y);
-                if (pixel.A == 0f) continue;
-
-                bool keep = false;
-                switch (slot)
-                {
-                    case EquipmentSlot.Head:
-                        // Keep head helmet region only (top 35%)
-                        if (normY <= 0.35f) keep = true;
-                        break;
-
-                    case EquipmentSlot.Chest:
-                        // Keep chest armor tunic region only (32% to 62%)
-                        if (normY >= 0.32f && normY <= 0.62f) keep = true;
-                        break;
-
-                    case EquipmentSlot.Legs:
-                        // Keep leggings region only (55% to 78%)
-                        if (normY >= 0.55f && normY <= 0.78f) keep = true;
-                        break;
-
-                    case EquipmentSlot.Boots:
-                        // Keep strictly isolated boots/feet region only (bottom 22%, normY >= 0.78f)
-                        if (normY >= 0.78f) keep = true;
-                        break;
-
-                    default:
-                        keep = true;
-                        break;
-                }
-
-                if (!keep)
-                {
-                    img.SetPixel(x, y, new Color(0, 0, 0, 0)); // Pure isolation!
-                }
-            }
-        }
-
-        ImageTexture isolatedTex = ImageTexture.CreateFromImage(img);
-        _isolatedEquipCache[cacheKey] = isolatedTex;
-        return isolatedTex;
     }
 
     private void RefreshAllEquipmentLayers()
@@ -265,12 +203,23 @@ public partial class GodotPaperdollVisualizer : Node3D
                 continue;
             }
 
+            // 1. Try loading extracted LPC transparent layer first
+            string lpcPath = $"res://Assets/Textures/Paperdoll/LPC/{slot}/{itemId}/{_currentDirection}.png";
+            Texture2D lpcTex = GD.Load<Texture2D>(lpcPath);
+
+            if (lpcTex != null)
+            {
+                layerSprite.Texture = lpcTex;
+                layerSprite.Visible = true;
+                continue;
+            }
+
+            // 2. Fallback to registry path
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
                 string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
-                string cacheKey = $"{slot}_{itemId}_{_currentDirection}";
-                Texture2D equipTex = LoadAndIsolateEquipmentTexture(resPath, slot, cacheKey);
+                Texture2D equipTex = GD.Load<Texture2D>(resPath);
 
                 if (equipTex != null)
                 {
