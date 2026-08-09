@@ -20,22 +20,22 @@ public partial class GodotPlayerVisualizer : Node3D
             GetParent()?.AddChild(_camera);
         }
 
-        _camera.Projection = Camera3D.ProjectionType.Orthogonal;
-        _camera.Size = 14.0f;
-        _camera.RotationDegrees = new Vector3(-45f, 45f, 0f);
+        _camera.Fov = 60.0f;
         _camera.Current = true; // Make camera active
 
-        // Position camera initially
-        _camera.GlobalPosition = GlobalPosition + new Vector3(-10f, 14f, 10f);
+        // Position camera looking at player
+        _camera.GlobalPosition = GlobalPosition + new Vector3(0f, 12f, 14f);
+        _camera.LookAt(GlobalPosition, Vector3.Up);
 
         // 2. Build Hero Visual Mesh (Stylized Cylinder Avatar)
         _heroMesh = new MeshInstance3D();
-        _heroMesh.Mesh = new CylinderMesh { TopRadius = 0.5f, BottomRadius = 0.5f, Height = 1.8f };
-        _heroMesh.Position = new Vector3(0f, 0.9f, 0f);
+        _heroMesh.Mesh = new CylinderMesh { TopRadius = 0.6f, BottomRadius = 0.6f, Height = 2.0f };
+        _heroMesh.Position = new Vector3(0f, 1.0f, 0f);
         AddChild(_heroMesh);
 
         ApplyClassColor(CharacterClass);
         CreateFeetAuraCircle();
+        CreateOverheadNameTag();
     }
 
     private void ApplyClassColor(string className)
@@ -58,26 +58,38 @@ public partial class GodotPlayerVisualizer : Node3D
     private void CreateFeetAuraCircle()
     {
         _auraMesh = new MeshInstance3D();
-        _auraMesh.Mesh = new QuadMesh { Size = new Vector2(1.8f, 1.8f) };
+        _auraMesh.Mesh = new QuadMesh { Size = new Vector2(2.2f, 2.2f) };
         _auraMesh.RotationDegrees = new Vector3(-90f, 0f, 0f);
         _auraMesh.Position = new Vector3(0f, 0.05f, 0f);
 
         StandardMaterial3D mat = new StandardMaterial3D 
         { 
-            AlbedoColor = new Color(0f, 0.95f, 1f, 0.4f),
+            AlbedoColor = new Color(0f, 0.95f, 1f, 0.5f),
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha
         };
         _auraMesh.MaterialOverride = mat;
         AddChild(_auraMesh);
     }
 
+    private void CreateOverheadNameTag()
+    {
+        Label3D nameTag = new Label3D();
+        nameTag.Text = "Thorin [Lvl 60 Warrior]";
+        nameTag.Position = new Vector3(0f, 2.5f, 0f);
+        nameTag.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
+        nameTag.Modulate = new Color(0f, 0.95f, 1f);
+        nameTag.FontSize = 24;
+        AddChild(nameTag);
+    }
+
     public override void _Process(double delta)
     {
-        // Smooth 2.5D Isometric Camera Follow
+        // Smooth Camera Follow
         if (_camera != null)
         {
-            Vector3 targetPos = GlobalPosition + new Vector3(-10f, 14f, 10f);
+            Vector3 targetPos = GlobalPosition + new Vector3(0f, 12f, 14f);
             _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, (float)delta * 5.0f);
+            _camera.LookAt(GlobalPosition, Vector3.Up);
         }
     }
 }

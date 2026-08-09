@@ -1,24 +1,18 @@
-; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
-
+; Engine configuration file for Godot Engine 4.3 .NET Mono edition
 config_version=5
 
 [application]
 
 config/name="MMORPG.GodotClient"
 run/main_scene="res://Scenes/MainWorld.tscn"
-config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+config/features=PackedStringArray("4.3", "C#", "GL Compatibility")
 
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [dotnet]
 
@@ -26,4 +20,6 @@ project/assembly_name="MMORPG.GodotClient"
 
 [rendering]
 
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
