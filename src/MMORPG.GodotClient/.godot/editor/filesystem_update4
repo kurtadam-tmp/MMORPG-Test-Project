@@ -6,3 +6,4 @@ res://Scripts/Network/MMORPGGodotClient.cs
 res://Scripts/UI/MMORPGSceneAutoInitializer.cs
 res://Scripts/Visuals/GodotBossVisualizer.cs
 res://Scripts/Visuals/GodotPaperdollVisualizer.cs
+res://Scripts/Tools/LpcOfflineExporter.cs
