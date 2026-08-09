@@ -2,13 +2,14 @@ ea4bc82a6ad023ab7ee23ee620429895
 ::res://::1786259407
 README_GODOT_SETUP.md::TextFile::-1::1786257388::0::1::::<><>::
 ::res://Assets/::1786259407
-::res://Assets/Textures/::1786259407
+::res://Assets/Textures/::1786259900
 boss_dragon.jpg::CompressedTexture2D::8691049484775414903::1786259391::1786259451::1::::<><>::
 ground_tile.jpg::CompressedTexture2D::2167812121274086452::1786259366::1786259456::1::::<><>::
 hero_warrior.jpg::CompressedTexture2D::6980277118960310891::1786259378::1786259451::1::::<><>::
+pixellab_tile.png::CompressedTexture2D::5950194877524103130::1786259900::1786259961::1::::<><>::
 zone_portal.jpg::CompressedTexture2D::6779457372490099510::1786259405::1786259451::1::::<><>::
-::res://Scenes/::1786258380
-MainWorld.tscn::PackedScene::2442768464780166126::1786258380::0::1::::<><>::res://Scripts/UI/MMORPGSceneAutoInitializer.cs<>res://Scripts/Visuals/GodotPlayerVisualizer.cs<>res://Scripts/Visuals/GodotBossVisualizer.cs<>res://Scripts/Visuals/GodotZonePortalVisualizer.cs<>res://Scripts/Network/MMORPGGodotClient.cs<>res://Scripts/UI/MMORPGMasterGodotUI.cs
+::res://Scenes/::1786259460
+MainWorld.tscn::PackedScene::2442768464780166126::1786259460::0::1::::<><>::res://Scripts/UI/MMORPGSceneAutoInitializer.cs<>res://Scripts/Visuals/GodotPlayerVisualizer.cs<>res://Scripts/Visuals/GodotBossVisualizer.cs<>res://Scripts/Visuals/GodotZonePortalVisualizer.cs<>res://Scripts/Network/MMORPGGodotClient.cs<>res://Scripts/UI/MMORPGMasterGodotUI.cs<>uid://55dswsukmg57::::res://Assets/Textures/ground_tile.jpg
 ::res://Scripts/::1786257382
 ::res://Scripts/Network/::1786257371
 MMORPGGodotClient.cs::CSharpScript::-1::1786257448::0::1::::<>Node<>::

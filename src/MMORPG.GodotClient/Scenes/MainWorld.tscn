@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://mmorpg_world_scene_2026"]
+[gd_scene load_steps=11 format=3 uid="uid://mmorpg_world_scene_2026"]
 
 [ext_resource type="Script" path="res://Scripts/UI/MMORPGSceneAutoInitializer.cs" id="1_initializer"]
 [ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerVisualizer.cs" id="2_player"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" path="res://Scripts/Visuals/GodotZonePortalVisualizer.cs" id="4_portal"]
 [ext_resource type="Script" path="res://Scripts/Network/MMORPGGodotClient.cs" id="5_net"]
 [ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="6_ui"]
-[ext_resource type="Texture2D" uid="uid://pixellab_tile_tex" path="res://Assets/Textures/pixellab_tile.png" id="7_pixellab_tex"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.12, 0.22, 0.38, 1)
@@ -26,9 +25,8 @@ ambient_light_energy = 1.0
 size = Vector2(60, 60)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
-transparency = 1
-albedo_texture = ExtResource("7_pixellab_tex")
-uv1_scale = Vector3(15, 15, 15)
+albedo_color = Color(0.12, 0.18, 0.25, 1)
+roughness = 0.8
 
 [node name="MainWorld" type="Node3D"]
 

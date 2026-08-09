@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class GodotPlayerVisualizer : Node3D
 {
@@ -8,6 +9,9 @@ public partial class GodotPlayerVisualizer : Node3D
     private Camera3D _camera = null!;
     private Sprite3D _heroSprite = null!;
     private MeshInstance3D _auraMesh = null!;
+
+    private Dictionary<string, Texture2D> _directionalTextures = new();
+    private string _currentDirection = "south";
 
     public override void _Ready()
     {
@@ -25,16 +29,31 @@ public partial class GodotPlayerVisualizer : Node3D
         _camera.GlobalPosition = GlobalPosition + new Vector3(0f, 12f, 14f);
         _camera.LookAt(GlobalPosition, Vector3.Up);
 
-        // 2. Build Hero Sprite3D (Hand-painted Warrior Avatar)
+        // 2. Load 8-Directional PixelLab Transparent PNG Textures
+        LoadDirectionalTextures();
+
+        // 3. Build Hero Sprite3D
         _heroSprite = new Sprite3D();
-        _heroSprite.Texture = GD.Load<Texture2D>("res://Assets/Textures/hero_warrior.jpg");
-        _heroSprite.PixelSize = 0.008f;
+        _heroSprite.Texture = _directionalTextures.GetValueOrDefault("south");
+        _heroSprite.PixelSize = 0.022f;
         _heroSprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
-        _heroSprite.Position = new Vector3(0f, 1.2f, 0f);
+        _heroSprite.Position = new Vector3(0f, 1.3f, 0f);
         AddChild(_heroSprite);
 
         CreateFeetAuraCircle();
         CreateOverheadNameTag();
+    }
+
+    private void LoadDirectionalTextures()
+    {
+        string baseDir = "res://Assets/Textures/Warrior/";
+        string[] dirs = new string[] { "south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west" };
+
+        foreach (string d in dirs)
+        {
+            Texture2D tex = GD.Load<Texture2D>($"{baseDir}{d}.png");
+            if (tex != null) _directionalTextures[d] = tex;
+        }
     }
 
     private void CreateFeetAuraCircle()
@@ -57,7 +76,7 @@ public partial class GodotPlayerVisualizer : Node3D
     {
         Label3D nameTag = new Label3D();
         nameTag.Text = "Thorin [Lvl 60 Warrior]";
-        nameTag.Position = new Vector3(0f, 2.6f, 0f);
+        nameTag.Position = new Vector3(0f, 2.8f, 0f);
         nameTag.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
         nameTag.Modulate = new Color(0f, 0.95f, 1f);
         nameTag.FontSize = 26;
@@ -77,6 +96,7 @@ public partial class GodotPlayerVisualizer : Node3D
         {
             moveDir = moveDir.Normalized();
             GlobalPosition += moveDir * MoveSpeed * (float)delta;
+            UpdateSpriteDirection(moveDir);
         }
 
         if (_camera != null)
@@ -84,6 +104,26 @@ public partial class GodotPlayerVisualizer : Node3D
             Vector3 targetPos = GlobalPosition + new Vector3(0f, 12f, 14f);
             _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, (float)delta * 8.0f);
             _camera.LookAt(GlobalPosition, Vector3.Up);
+        }
+    }
+
+    private void UpdateSpriteDirection(Vector3 moveDir)
+    {
+        string newDir = "south";
+
+        if (moveDir.Z > 0.3f && Mathf.Abs(moveDir.X) < 0.3f) newDir = "south";
+        else if (moveDir.Z < -0.3f && Mathf.Abs(moveDir.X) < 0.3f) newDir = "north";
+        else if (moveDir.X > 0.3f && Mathf.Abs(moveDir.Z) < 0.3f) newDir = "east";
+        else if (moveDir.X < -0.3f && Mathf.Abs(moveDir.Z) < 0.3f) newDir = "west";
+        else if (moveDir.Z > 0f && moveDir.X > 0f) newDir = "south-east";
+        else if (moveDir.Z > 0f && moveDir.X < 0f) newDir = "south-west";
+        else if (moveDir.Z < 0f && moveDir.X > 0f) newDir = "north-east";
+        else if (moveDir.Z < 0f && moveDir.X < 0f) newDir = "north-west";
+
+        if (newDir != _currentDirection && _directionalTextures.ContainsKey(newDir))
+        {
+            _currentDirection = newDir;
+            _heroSprite.Texture = _directionalTextures[newDir];
         }
     }
 }
