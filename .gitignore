@@ -1,6 +1,6 @@
-# .gitignore for MMORPG Test Project (.NET + Unity)
+# .gitignore for MMORPG Project (.NET 10 + Godot 4.3 C#)
 
-# .NET Build outputs
+# .NET Build outputs & IDEs
 bin/
 obj/
 *.user
@@ -8,22 +8,13 @@ obj/
 .vs/
 .vscode/
 
-# Unity Build outputs & Temp files
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
-[Mm]emoryCaptures/
-*.csproj
-*.unityproj
-*.sln
-*.userprefs
+# Godot 4.3 C# Build outputs & Cache
+.godot/
+*.import
+*.ctex
+*.vulkan.cache
 
-# OS & Temporary scripts
+# OS & System files
 .DS_Store
 Thumbs.db
-ssh_runner.py
-ssh_probe.py
+desktop.ini
