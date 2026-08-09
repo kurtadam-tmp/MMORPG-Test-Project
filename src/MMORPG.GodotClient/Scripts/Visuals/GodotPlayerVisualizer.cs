@@ -16,11 +16,10 @@ public partial class GodotPlayerVisualizer : Node3D
     private bool _isRightClickDragging = false;
     private float _cameraYawOffset = 0.0f; // Range: -15 to +15 degrees
 
-    // Walking Animation Variables (Bobbing & Tilt)
+    // Walking Bobbing Parameters
     private float _walkAnimTimer = 0.0f;
     private const float WalkBobSpeed = 14.0f;
-    private const float WalkBobHeight = 0.12f;
-    private const float WalkTiltAngle = 3.5f;
+    private const float WalkBobHeight = 0.08f;
 
     public override void _Ready()
     {
@@ -108,6 +107,7 @@ public partial class GodotPlayerVisualizer : Node3D
         if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right)) moveDir.X += 1f;
 
         bool isMoving = moveDir != Vector3.Zero;
+        _paperdoll?.SetMovingState(isMoving);
 
         if (isMoving)
         {
@@ -115,25 +115,21 @@ public partial class GodotPlayerVisualizer : Node3D
             GlobalPosition += moveDir * MoveSpeed * (float)delta;
             UpdateDirection(moveDir);
 
-            // Procedural Walk Animation (Y-Bobbing & Z-Tilt)
+            // Subtle Procedural Bobbing
             _walkAnimTimer += (float)delta * WalkBobSpeed;
             float bobY = Mathf.Abs(Mathf.Sin(_walkAnimTimer)) * WalkBobHeight;
-            float tiltZ = Mathf.Sin(_walkAnimTimer * 0.5f) * Mathf.DegToRad(WalkTiltAngle);
 
             if (_paperdoll != null)
             {
                 _paperdoll.Position = new Vector3(0f, bobY, 0f);
-                _paperdoll.Rotation = new Vector3(0f, 0f, tiltZ);
             }
         }
         else
         {
-            // Reset to idle resting position when stopped
             _walkAnimTimer = 0.0f;
             if (_paperdoll != null)
             {
                 _paperdoll.Position = _paperdoll.Position.Lerp(Vector3.Zero, 0.2f);
-                _paperdoll.Rotation = new Vector3(0f, 0f, 0f);
             }
         }
 

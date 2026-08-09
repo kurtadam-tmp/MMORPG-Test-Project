@@ -20,6 +20,17 @@ public partial class GodotPaperdollVisualizer : Node3D
     };
 
     private string _currentDirection = "south";
+    private bool _isMoving = false;
+
+    // Frame-by-Frame Walk Cycle Animation
+    private float _frameTimer = 0.0f;
+    private int _currentWalkFrame = 0;
+    private const int TotalWalkFrames = 6;
+    private const float FrameRate = 0.10f; // 10 FPS walk cycle animation
+
+    // Preloaded Base Body Animation Textures: Direction -> FrameIndex -> Texture
+    private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
+    private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
     public override void _Ready()
     {
@@ -34,14 +45,29 @@ public partial class GodotPaperdollVisualizer : Node3D
         CreateLayerNode("MainHand", 0.0232f);
         CreateLayerNode("OffHand", 0.0234f);
 
-        // Load Base Body Texture
-        Texture2D baseTex = GD.Load<Texture2D>("res://Assets/Textures/Warrior/south.png");
-        if (_layers.TryGetValue("BaseBody", out var baseSprite) && baseTex != null)
-        {
-            baseSprite.Texture = baseTex;
-        }
-
+        LoadBaseBodyTextures();
         RefreshAllEquipmentLayers();
+    }
+
+    private void LoadBaseBodyTextures()
+    {
+        string[] dirs = new string[] { "south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west" };
+
+        foreach (string d in dirs)
+        {
+            // Idle Texture
+            Texture2D idleTex = GD.Load<Texture2D>($"res://Assets/Textures/BaseBody/Idle/{d}.png");
+            if (idleTex != null) _baseIdleTextures[d] = idleTex;
+
+            // 6-Frame Walk Cycle Textures
+            Texture2D[] walkFrames = new Texture2D[TotalWalkFrames];
+            for (int f = 0; f < TotalWalkFrames; f++)
+            {
+                Texture2D frameTex = GD.Load<Texture2D>($"res://Assets/Textures/BaseBody/Walking/{d}/frame_00{f}.png");
+                if (frameTex != null) walkFrames[f] = frameTex;
+            }
+            _baseWalkTextures[d] = walkFrames;
+        }
     }
 
     private Sprite3D CreateLayerNode(string layerKey, float pixelSize)
@@ -54,6 +80,35 @@ public partial class GodotPaperdollVisualizer : Node3D
         AddChild(sprite);
         _layers[layerKey] = sprite;
         return sprite;
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        if (_isMoving)
+        {
+            _frameTimer += (float)delta;
+            if (_frameTimer >= FrameRate)
+            {
+                _frameTimer = 0.0f;
+                _currentWalkFrame = (_currentWalkFrame + 1) % TotalWalkFrames;
+                UpdateBaseBodyFrame();
+            }
+        }
+        else
+        {
+            _currentWalkFrame = 0;
+            _frameTimer = 0.0f;
+            UpdateBaseBodyFrame();
+        }
+    }
+
+    public void SetMovingState(bool isMoving)
+    {
+        if (_isMoving == isMoving) return;
+        _isMoving = isMoving;
+        _currentWalkFrame = 0;
+        _frameTimer = 0.0f;
+        UpdateBaseBodyFrame();
     }
 
     public void EquipItem(EquipmentSlot slot, string itemId)
@@ -77,16 +132,25 @@ public partial class GodotPaperdollVisualizer : Node3D
         RefreshAllEquipmentLayers();
     }
 
+    private void UpdateBaseBodyFrame()
+    {
+        if (!_layers.TryGetValue("BaseBody", out var baseSprite)) return;
+
+        if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
+        {
+            baseSprite.Texture = frames[_currentWalkFrame];
+        }
+        else if (_baseIdleTextures.TryGetValue(_currentDirection, out var idleTex) && idleTex != null)
+        {
+            baseSprite.Texture = idleTex;
+        }
+    }
+
     private void RefreshAllEquipmentLayers()
     {
-        // 1. Update Base Body Sprite for active direction
-        Texture2D baseTex = GD.Load<Texture2D>($"res://Assets/Textures/Warrior/{_currentDirection}.png");
-        if (_layers.TryGetValue("BaseBody", out var baseSprite) && baseTex != null)
-        {
-            baseSprite.Texture = baseTex;
-        }
+        UpdateBaseBodyFrame();
 
-        // 2. Refresh Modular Layers matching equipped items
+        // Refresh Modular Equipment Overlay Layers
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
@@ -111,7 +175,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 }
             }
 
-            // Fallback: Keep layer visible if valid equipment
             layerSprite.Visible = true;
         }
     }
