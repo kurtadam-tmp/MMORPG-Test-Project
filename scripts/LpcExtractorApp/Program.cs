@@ -8,12 +8,13 @@ class Program
 {
     private const int FrameSize = 64;
 
+    // Standard 576x256 LPC Standalone Walk Sheet Row Mapping (4 Rows x 64px)
     private static readonly Dictionary<string, int> WalkRowY = new()
     {
-        ["north"] = 512,
-        ["west"] = 576,
-        ["south"] = 640,
-        ["east"] = 704
+        ["north"] = 0,    // Row 0 (Y: 0px)
+        ["west"]  = 64,   // Row 1 (Y: 64px)
+        ["south"] = 128,  // Row 2 (Y: 128px)
+        ["east"]  = 192   // Row 3 (Y: 192px)
     };
 
     static void Main(string[] args)
