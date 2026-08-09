@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://mmorpg_world_scene_2026"]
+
+[ext_resource type="Script" path="res://Scripts/UI/MMORPGSceneAutoInitializer.cs" id="1_initializer"]
+
+[node name="MainWorld" type="Node3D"]
+
+[node name="SceneAutoInitializer" type="Node" parent="."]
+script = ExtResource("1_initializer")

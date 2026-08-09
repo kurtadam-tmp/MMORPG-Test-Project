@@ -1,0 +1,26 @@
+; Engine configuration file for Godot Engine 4.3 .NET Mono edition
+; Project Name: MMORPG Godot 2.5D Client
+
+config_version=5
+
+[application]
+
+config/name="MMORPG.GodotClient"
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+run/main_scene="res://Scenes/MainWorld.tscn"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[dotnet]
+
+project/assembly_name="MMORPG.GodotClient"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+textures/canvas_textures/default_texture_filter=0
