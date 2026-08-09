@@ -28,6 +28,17 @@ public partial class GodotPaperdollVisualizer : Node3D
     private const int TotalWalkFrames = 6;
     private const float FrameRate = 0.10f; // 10 FPS walk cycle animation
 
+    // Footstep Vector Offsets for each of the 6 walk frames (X, Y, Z displacement)
+    private static readonly Vector3[] FootStepOffsets = new Vector3[]
+    {
+        new Vector3(0.00f, 0.00f, 0.00f),   // Frame 0: Resting Stand
+        new Vector3(-0.03f, 0.03f, 0.03f),  // Frame 1: Left Foot Forward Step
+        new Vector3(-0.05f, 0.06f, 0.05f),  // Frame 2: Left Foot Peak Lift Step
+        new Vector3(0.00f, 0.01f, 0.00f),   // Frame 3: Mid-stride Neutral
+        new Vector3(0.03f, 0.03f, -0.03f),  // Frame 4: Right Foot Forward Step
+        new Vector3(0.05f, 0.06f, -0.05f)   // Frame 5: Right Foot Peak Lift Step
+    };
+
     // Preloaded Base Body Animation Textures: Direction -> FrameIndex -> Texture
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
@@ -140,7 +151,7 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         if (!_layers.TryGetValue("BaseBody", out var baseSprite)) return;
 
-        baseSprite.Visible = true; // Always keep naked walking base body active!
+        baseSprite.Visible = true;
 
         if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
         {
@@ -154,14 +165,25 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void SyncEquipmentAnimationFrames()
     {
-        // Synchronizes equipment layers with current step frame so armor, boots & helm step in 1-to-1 sync!
+        // Footstep Alignment Engine: Moves boots and legs matching exact foot step offsets per walk frame
+        Vector3 stepOffset = _isMoving ? FootStepOffsets[_currentWalkFrame] : Vector3.Zero;
+
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
             if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
 
-            float stepOffsetY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
-            layerSprite.Position = new Vector3(0f, 1.3f + stepOffsetY, 0f);
+            if (slot == EquipmentSlot.Boots || slot == EquipmentSlot.Legs)
+            {
+                // Move boots/leggings in 1-to-1 sync with footstep displacement
+                layerSprite.Position = new Vector3(stepOffset.X, 1.3f + stepOffset.Y, stepOffset.Z);
+            }
+            else
+            {
+                // General torso/head bobbing
+                float torsoBobY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
+                layerSprite.Position = new Vector3(0f, 1.3f + torsoBobY, 0f);
+            }
         }
     }
 
@@ -191,23 +213,23 @@ public partial class GodotPaperdollVisualizer : Node3D
                 switch (slot)
                 {
                     case EquipmentSlot.Head:
-                        // Keep head helmet region only (top 38%)
-                        if (normY <= 0.38f) keep = true;
+                        // Keep head helmet region only (top 35%)
+                        if (normY <= 0.35f) keep = true;
                         break;
 
                     case EquipmentSlot.Chest:
-                        // Keep chest armor tunic region only (28% to 60%)
-                        if (normY >= 0.28f && normY <= 0.60f) keep = true;
+                        // Keep chest armor tunic region only (32% to 62%)
+                        if (normY >= 0.32f && normY <= 0.62f) keep = true;
                         break;
 
                     case EquipmentSlot.Legs:
-                        // Keep leggings region only (52% to 78%)
-                        if (normY >= 0.52f && normY <= 0.78f) keep = true;
+                        // Keep leggings region only (55% to 78%)
+                        if (normY >= 0.55f && normY <= 0.78f) keep = true;
                         break;
 
                     case EquipmentSlot.Boots:
-                        // Keep boots/feet region only (bottom 25%, y >= 75%)
-                        if (normY >= 0.75f) keep = true;
+                        // Keep strictly isolated boots/feet region only (bottom 22%, normY >= 0.78f)
+                        if (normY >= 0.78f) keep = true;
                         break;
 
                     default:
@@ -217,7 +239,7 @@ public partial class GodotPaperdollVisualizer : Node3D
 
                 if (!keep)
                 {
-                    img.SetPixel(x, y, new Color(0, 0, 0, 0)); // Crop/mask non-slot pixels!
+                    img.SetPixel(x, y, new Color(0, 0, 0, 0)); // Pure isolation!
                 }
             }
         }
