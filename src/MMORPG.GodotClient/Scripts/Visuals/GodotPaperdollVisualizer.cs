@@ -49,9 +49,6 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         Instance = this;
 
-        // Process 8-directional IronLeggings sprite sheet from parent LPC library
-        ExtractLpcLeggings8Dir.ProcessIronLeggings8Dir();
-
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
         CreateLayerNode("Shadow", 0.0210f);
         CreateLayerNode("BaseBody", 0.0220f);

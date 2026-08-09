@@ -1,9 +1,9 @@
-res://Scenes/MainWorld.tscn
-res://Scripts/Visuals/GodotZonePortalVisualizer.cs
 res://Scripts/Visuals/GodotPlayerVisualizer.cs
+res://Scripts/Visuals/GodotPaperdollVisualizer.cs
 res://Scripts/UI/MMORPGMasterGodotUI.cs
-res://Scripts/Network/MMORPGGodotClient.cs
+res://Scripts/Tools/ExtractLpcLeggings8Dir.cs
 res://Scripts/UI/MMORPGSceneAutoInitializer.cs
 res://Scripts/Visuals/GodotBossVisualizer.cs
-res://Scripts/Visuals/GodotPaperdollVisualizer.cs
-res://Scripts/Tools/LpcOfflineExporter.cs
+res://Scripts/Network/MMORPGGodotClient.cs
+res://Scripts/Visuals/GodotZonePortalVisualizer.cs
+res://Scenes/MainWorld.tscn
