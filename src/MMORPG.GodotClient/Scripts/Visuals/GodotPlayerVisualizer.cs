@@ -13,6 +13,9 @@ public partial class GodotPlayerVisualizer : Node3D
     private Dictionary<string, Texture2D> _directionalTextures = new();
     private string _currentDirection = "south";
 
+    private bool _isRightClickDragging = false;
+    private float _cameraYawOffset = 0.0f; // Range: -15 to +15 degrees
+
     public override void _Ready()
     {
         // 1. Setup Camera3D
@@ -26,8 +29,7 @@ public partial class GodotPlayerVisualizer : Node3D
 
         _camera.Fov = 60.0f;
         _camera.Current = true;
-        _camera.GlobalPosition = GlobalPosition + new Vector3(0f, 12f, 14f);
-        _camera.LookAt(GlobalPosition, Vector3.Up);
+        UpdateCameraTransform();
 
         // 2. Load 8-Directional PixelLab Transparent PNG Textures
         LoadDirectionalTextures();
@@ -83,6 +85,20 @@ public partial class GodotPlayerVisualizer : Node3D
         AddChild(nameTag);
     }
 
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        // Mouse Right-Click Drag for Camera Yaw Rotation (-15° to +15°)
+        if (@event is InputEventMouseButton mouseBtn && mouseBtn.ButtonIndex == MouseButton.Right)
+        {
+            _isRightClickDragging = mouseBtn.Pressed;
+        }
+        else if (@event is InputEventMouseMotion mouseMotion && _isRightClickDragging)
+        {
+            _cameraYawOffset += mouseMotion.Relative.X * 0.15f;
+            _cameraYawOffset = Mathf.Clamp(_cameraYawOffset, -15.0f, 15.0f);
+        }
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         Vector3 moveDir = Vector3.Zero;
@@ -99,12 +115,21 @@ public partial class GodotPlayerVisualizer : Node3D
             UpdateSpriteDirection(moveDir);
         }
 
-        if (_camera != null)
-        {
-            Vector3 targetPos = GlobalPosition + new Vector3(0f, 12f, 14f);
-            _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, (float)delta * 8.0f);
-            _camera.LookAt(GlobalPosition, Vector3.Up);
-        }
+        UpdateCameraTransform();
+    }
+
+    private void UpdateCameraTransform()
+    {
+        if (_camera == null) return;
+
+        // Apply ±15 degree Yaw Offset around Player
+        float yawRad = Mathf.DegToRad(_cameraYawOffset);
+        Vector3 baseOffset = new Vector3(0f, 12f, 14f);
+        Vector3 rotatedOffset = baseOffset.Rotated(Vector3.Up, yawRad);
+
+        Vector3 targetPos = GlobalPosition + rotatedOffset;
+        _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, 0.2f);
+        _camera.LookAt(GlobalPosition, Vector3.Up);
     }
 
     private void UpdateSpriteDirection(Vector3 moveDir)

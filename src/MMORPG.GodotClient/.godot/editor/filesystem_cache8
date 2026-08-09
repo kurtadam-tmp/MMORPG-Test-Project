@@ -2,7 +2,7 @@ ea4bc82a6ad023ab7ee23ee620429895
 ::res://::1786259407
 README_GODOT_SETUP.md::TextFile::-1::1786257388::0::1::::<><>::
 ::res://Assets/::1786259407
-::res://Assets/Textures/::1786260225
+::res://Assets/Textures/::1786260987
 boss_dragon.jpg::CompressedTexture2D::8691049484775414903::1786259391::1786259451::1::::<><>::
 ground_tile.jpg::CompressedTexture2D::2167812121274086452::1786259366::1786259456::1::::<><>::
 hero_warrior.jpg::CompressedTexture2D::6980277118960310891::1786259378::1786259451::1::::<><>::
@@ -10,6 +10,11 @@ pixellab_portal.png::CompressedTexture2D::8100103858247584462::1786260029::17862
 pixellab_tile.png::CompressedTexture2D::5950194877524103130::1786259900::1786259961::1::::<><>::
 seamless_grass.jpg::CompressedTexture2D::2900152417980885123::1786260221::1786260309::1::::<><>::
 zone_portal.jpg::CompressedTexture2D::6779457372490099510::1786259405::1786259451::1::::<><>::
+::res://Assets/Textures/DragonBoss/::1786260988
+east.png::CompressedTexture2D::5291410655293588125::1786260987::1786261061::1::::<><>::
+north.png::CompressedTexture2D::4096269441803149564::1786260987::1786261061::1::::<><>::
+south.png::CompressedTexture2D::7906785532374571812::1786260987::1786261061::1::::<><>::
+west.png::CompressedTexture2D::8252294713555066909::1786260988::1786261061::1::::<><>::
 ::res://Assets/Textures/Warrior/::1786260101
 east.png::CompressedTexture2D::1113238929242168165::1786260014::1786260101::1::::<><>::
 north-east.png::CompressedTexture2D::5392829054179340793::1786260015::1786260101::1::::<><>::
@@ -19,8 +24,8 @@ south-east.png::CompressedTexture2D::2505815594190113181::1786260015::1786260101
 south-west.png::CompressedTexture2D::3490488072562780377::1786260015::1786260101::1::::<><>::
 south.png::CompressedTexture2D::3221598629084717882::1786260014::1786260101::1::::<><>::
 west.png::CompressedTexture2D::7736548062613429090::1786260014::1786260101::1::::<><>::
-::res://Scenes/::1786260104
-MainWorld.tscn::PackedScene::2442768464780166126::1786260104::0::1::::<><>::res://Scripts/UI/MMORPGSceneAutoInitializer.cs<>res://Scripts/Visuals/GodotPlayerVisualizer.cs<>res://Scripts/Visuals/GodotBossVisualizer.cs<>res://Scripts/Visuals/GodotZonePortalVisualizer.cs<>res://Scripts/Network/MMORPGGodotClient.cs<>res://Scripts/UI/MMORPGMasterGodotUI.cs
+::res://Scenes/::1786260310
+MainWorld.tscn::PackedScene::2442768464780166126::1786260310::0::1::::<><>::res://Scripts/UI/MMORPGSceneAutoInitializer.cs<>res://Scripts/Visuals/GodotPlayerVisualizer.cs<>res://Scripts/Visuals/GodotBossVisualizer.cs<>res://Scripts/Visuals/GodotZonePortalVisualizer.cs<>res://Scripts/Network/MMORPGGodotClient.cs<>res://Scripts/UI/MMORPGMasterGodotUI.cs<>uid://bhk4c7d8qodmp::::res://Assets/Textures/seamless_grass.jpg
 ::res://Scripts/::1786257382
 ::res://Scripts/Network/::1786257371
 MMORPGGodotClient.cs::CSharpScript::-1::1786257448::0::1::::<>Node<>::
@@ -28,6 +33,6 @@ MMORPGGodotClient.cs::CSharpScript::-1::1786257448::0::1::::<>Node<>::
 MMORPGMasterGodotUI.cs::CSharpScript::-1::1786257866::0::1::::<>CanvasLayer<>::
 MMORPGSceneAutoInitializer.cs::CSharpScript::-1::1786258155::0::1::::<>Node<>::
 ::res://Scripts/Visuals/::1786257379
-GodotBossVisualizer.cs::CSharpScript::-1::1786260229::0::1::::<>Node3D<>::
+GodotBossVisualizer.cs::CSharpScript::-1::1786260992::0::1::::<>Node3D<>::
 GodotPlayerVisualizer.cs::CSharpScript::-1::1786260036::0::1::::<>Node3D<>::
 GodotZonePortalVisualizer.cs::CSharpScript::-1::1786260040::0::1::::<>Node3D<>::
