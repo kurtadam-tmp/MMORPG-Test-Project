@@ -7,7 +7,7 @@ public partial class GodotPlayerController : CharacterBody3D
 
     [Export] public float MoveSpeed = 6.0f;
 
-    private TreeOfSaviorPaperdollEngine _paperdoll = null!;
+    private SkeletalPaperdollEngine _paperdoll = null!;
     private Camera3D _camera = null!;
     private Sprite3D _paperdollSprite3D = null!;
     private SubViewport _paperdollSubViewport = null!;
@@ -26,7 +26,7 @@ public partial class GodotPlayerController : CharacterBody3D
         };
         AddChild(_paperdollSubViewport);
 
-        _paperdoll = new TreeOfSaviorPaperdollEngine { Name = "ToSPaperdollEngine" };
+        _paperdoll = new SkeletalPaperdollEngine { Name = "SkeletalPaperdollEngine" };
         _paperdollSubViewport.AddChild(_paperdoll);
 
         _paperdollSprite3D = new Sprite3D

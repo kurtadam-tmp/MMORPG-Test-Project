@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using MMORPG.Shared.Enums;
 using MMORPG.Shared.Registry;
 
-public partial class TreeOfSaviorPaperdollEngine : Node2D
+public partial class SkeletalPaperdollEngine : Node2D
 {
-    public static TreeOfSaviorPaperdollEngine Instance { get; private set; } = null!;
+    public static SkeletalPaperdollEngine Instance { get; private set; } = null!;
 
     // 2D Skeleton Nodes
     private Skeleton2D _skeleton = null!;
@@ -42,12 +42,12 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
         Build2DSkeletonTree();
         BuildGeometricPlaceholders();
         RefreshAllEquipmentLayers();
-        GD.Print("[Tree of Savior Engine] Procedural Geometric Placeholder Engine ready!");
+        GD.Print("[Skeletal Paperdoll Engine] Standard Skeletal Paperdoll Engine ready!");
     }
 
     private void Build2DSkeletonTree()
     {
-        _skeleton = new Skeleton2D { Name = "ToSSkeleton2D" };
+        _skeleton = new Skeleton2D { Name = "SkeletalPaperdoll2D" };
         AddChild(_skeleton);
 
         _hipsBone = CreateBone("HipsBone", new Vector2(0, -32));
@@ -201,14 +201,14 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[Geometric Paperdoll] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Skeletal Paperdoll] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[Geometric Paperdoll] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Skeletal Paperdoll] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
