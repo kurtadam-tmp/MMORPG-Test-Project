@@ -1,11 +1,9 @@
 using Godot;
-using System;
 using System.IO;
 using System.Collections.Generic;
-using MMORPG.Shared.Enums;
-using MMORPG.Shared.Registry;
 
-public static class LpcPaperdollEngine
+[Tool]
+public partial class LpcOfflineExporter : Node
 {
     private const int FrameSize = 64;
 
@@ -29,39 +27,55 @@ public static class LpcPaperdollEngine
         ["south-west"] = "south"
     };
 
-    public static void ExtractLpcEquipmentSheets()
+    public static void ExportAllEquipmentOffline()
     {
         string projectRoot = ProjectSettings.GlobalizePath("res://");
-        string repoBase = Path.Combine(projectRoot, "../../tools/lpc_generator/spritesheets");
-        string outputBase = Path.Combine(projectRoot, "Assets/Textures/Paperdoll/LPC");
+        string parentToolsRepo = Path.Combine(projectRoot, "../../tools/lpc_generator/spritesheets");
+        string paperdollBase = Path.Combine(projectRoot, "Assets/Textures/Paperdoll");
 
-        if (!Directory.Exists(repoBase))
+        GD.Print($"[LPC Offline Exporter] Reading LPC library from '{parentToolsRepo}'...");
+
+        if (!Directory.Exists(parentToolsRepo))
         {
-            GD.PrintErr($"[LPC Engine] Local LPC repository not found at '{repoBase}'. Skipping extraction.");
+            GD.PrintErr($"[LPC Offline Exporter] Parent LPC directory '{parentToolsRepo}' not found!");
             return;
         }
 
+        // Clean old legacy item files
+        CleanDirectory(paperdollBase);
+
         var itemsToExtract = new Dictionary<string, string>
         {
-            ["Head/IronHelm"] = FindFirstFile(repoBase, "head", "helmets", "*.png"),
-            ["Armor/IronPlateChest"] = FindFirstFile(repoBase, "torso", "armors", "*.png"),
-            ["Legs/IronLeggings"] = FindFirstFile(repoBase, "legs", "pants", "*.png"),
-            ["Boots/IronBoots"] = FindFirstFile(repoBase, "feet", "boots", "*.png"),
-            ["Weapons/IronSword"] = FindFirstFile(repoBase, "weapon", "sword", "*.png")
+            ["Head/IronHelm"] = FindFirstFile(parentToolsRepo, "head", "helmets", "*.png"),
+            ["Armor/IronPlateChest"] = FindFirstFile(parentToolsRepo, "torso", "armors", "*.png"),
+            ["Legs/IronLeggings"] = FindFirstFile(parentToolsRepo, "legs", "pants", "*.png"),
+            ["Boots/IronBoots"] = FindFirstFile(parentToolsRepo, "feet", "boots", "*.png"),
+            ["Weapons/IronSword"] = FindFirstFile(parentToolsRepo, "weapon", "sword", "*.png")
         };
 
         foreach (var (itemKey, sheetPath) in itemsToExtract)
         {
             if (string.IsNullOrEmpty(sheetPath) || !File.Exists(sheetPath))
             {
-                GD.PrintErr($"[LPC Engine] Could not find sheet for '{itemKey}'.");
+                GD.PrintErr($"[LPC Offline Exporter] Missing sheet for '{itemKey}'.");
                 continue;
             }
 
-            string outDir = Path.Combine(outputBase, itemKey);
+            string outDir = Path.Combine(paperdollBase, itemKey);
             Directory.CreateDirectory(outDir);
             ExtractSheet(sheetPath, outDir, itemKey);
         }
+
+        GD.Print("[LPC Offline Exporter] ALL EQUIPMENT SPRITES OFFLINE EXPORT COMPLETED!");
+    }
+
+    private static void CleanDirectory(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, true);
+        }
+        Directory.CreateDirectory(path);
     }
 
     private static string FindFirstFile(string baseDir, string sub1, string sub2, string pattern)
@@ -87,10 +101,9 @@ public static class LpcPaperdollEngine
             Image frameImg = fullSheet.GetRegion(new Rect2I(0, y, FrameSize, FrameSize));
             string framePath = Path.Combine(outDir, $"{dirName}.png");
             frameImg.SavePng(framePath);
-            GD.Print($"[LPC Engine] Successfully extracted '{itemKey}' ({dirName}) -> {framePath}");
+            GD.Print($"[LPC Offline Exporter] Exported built-in '{itemKey}' ({dirName}) -> {framePath}");
         }
 
-        // Copy diagonal aliases
         foreach (var (diagDir, targetDir) in DiagMapping)
         {
             if (WalkRowY.ContainsKey(diagDir)) continue;

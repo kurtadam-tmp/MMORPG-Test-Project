@@ -5,6 +5,8 @@ using MMORPG.Shared.Registry;
 
 public partial class GodotPaperdollVisualizer : Node3D
 {
+    public static GodotPaperdollVisualizer Instance { get; private set; } = null!;
+
     // 10 Modular Paperdoll Sprite3D Layers ordered by Z-Depth
     private readonly Dictionary<string, Sprite3D> _layers = new();
 
@@ -43,13 +45,12 @@ public partial class GodotPaperdollVisualizer : Node3D
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
-    // Isolated Equipment Textures Cache: Slot_ItemId_Direction -> Texture2D
-    private readonly Dictionary<string, Texture2D> _isolatedEquipCache = new();
-
     public override void _Ready()
     {
-        // Extract open-source LPC paperdoll equipment layers on startup
-        LpcPaperdollEngine.ExtractLpcEquipmentSheets();
+        Instance = this;
+
+        // Perform offline export of equipment textures if missing
+        LpcOfflineExporter.ExportAllEquipmentOffline();
 
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
         CreateLayerNode("Shadow", 0.0210f);
@@ -133,14 +134,14 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[Modular Paperdoll System] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Built-in Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[Modular Paperdoll System] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Built-in Paperdoll Engine] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
@@ -191,7 +192,7 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         UpdateBaseBodyFrame();
 
-        // Refresh Modular Equipment Overlay Layers
+        // Refresh Built-in Pre-generated Modular Equipment Overlay Layers
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
@@ -203,18 +204,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 continue;
             }
 
-            // 1. Try loading extracted LPC transparent layer first
-            string lpcPath = $"res://Assets/Textures/Paperdoll/LPC/{slot}/{itemId}/{_currentDirection}.png";
-            Texture2D lpcTex = GD.Load<Texture2D>(lpcPath);
-
-            if (lpcTex != null)
-            {
-                layerSprite.Texture = lpcTex;
-                layerSprite.Visible = true;
-                continue;
-            }
-
-            // 2. Fallback to registry path
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
