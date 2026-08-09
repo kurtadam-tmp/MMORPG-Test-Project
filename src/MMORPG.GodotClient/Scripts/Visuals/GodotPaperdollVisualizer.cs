@@ -55,16 +55,16 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void CreateProceduralEquipmentPlaceholders()
     {
-        // 1. Iron Sword Placeholder (Steel Blade + Gold Hilt)
+        // 1. Iron Sword Placeholder
         _placeholderTextures["IronSword"] = CreateColoredPlaceholderTexture(new Color(0.9f, 0.95f, 1f), new Color(1f, 0.85f, 0.2f), "sword");
 
-        // 2. Leather Chest Armor Placeholder (Brown & Leather Gold Tunic Overlay)
+        // 2. Leather Chest Armor Placeholder
         _placeholderTextures["LeatherChest"] = CreateColoredPlaceholderTexture(new Color(0.6f, 0.35f, 0.15f), new Color(0.85f, 0.65f, 0.25f), "chest");
 
-        // 3. Iron Helmet Placeholder (Silver Steel Helm + Red Plume)
+        // 3. Iron Helmet Placeholder
         _placeholderTextures["IronHelm"] = CreateColoredPlaceholderTexture(new Color(0.75f, 0.8f, 0.85f), new Color(0.95f, 0.15f, 0.15f), "helm");
 
-        // 4. Tower Shield Placeholder (Cyan Glowing Shield)
+        // 4. Tower Shield Placeholder
         _placeholderTextures["TowerShield"] = CreateColoredPlaceholderTexture(new Color(0f, 0.85f, 1f), new Color(0.1f, 0.2f, 0.4f), "shield");
     }
 
@@ -73,7 +73,7 @@ public partial class GodotPaperdollVisualizer : Node3D
         int width = 92;
         int height = 92;
         Image img = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
-        img.Fill(new Color(0, 0, 0, 0)); // Transparent background
+        img.Fill(new Color(0, 0, 0, 0));
 
         for (int y = 0; y < height; y++)
         {
@@ -81,15 +81,11 @@ public partial class GodotPaperdollVisualizer : Node3D
             {
                 if (shapeType == "sword")
                 {
-                    // Draw Sword Blade on Right Side of Character Hand
-                    if (x >= 62 && x <= 68 && y >= 15 && y <= 65)
-                        img.SetPixel(x, y, mainColor);
-                    else if (x >= 55 && x <= 75 && y >= 65 && y <= 70)
-                        img.SetPixel(x, y, accentColor); // Hilt Guard
+                    if (x >= 62 && x <= 68 && y >= 15 && y <= 65) img.SetPixel(x, y, mainColor);
+                    else if (x >= 55 && x <= 75 && y >= 65 && y <= 70) img.SetPixel(x, y, accentColor);
                 }
                 else if (shapeType == "chest")
                 {
-                    // Draw Armor Tunic Over Torso Area
                     if (x >= 32 && x <= 60 && y >= 32 && y <= 58)
                     {
                         bool isBorder = (x == 32 || x == 60 || y == 32 || y == 58);
@@ -98,7 +94,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 }
                 else if (shapeType == "helm")
                 {
-                    // Draw Helmet Over Head Area
                     if (x >= 30 && x <= 62 && y >= 8 && y <= 32)
                     {
                         bool isPlume = (y <= 14 && x >= 42 && x <= 50);
@@ -107,7 +102,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 }
                 else if (shapeType == "shield")
                 {
-                    // Draw Tower Shield on Left Side of Character Hand
                     if (x >= 20 && x <= 34 && y >= 35 && y <= 68)
                     {
                         bool isEmblem = (x >= 25 && x <= 29 && y >= 45 && y <= 55);
@@ -161,6 +155,7 @@ public partial class GodotPaperdollVisualizer : Node3D
                 _frameTimer = 0.0f;
                 _currentWalkFrame = (_currentWalkFrame + 1) % TotalWalkFrames;
                 UpdateBaseBodyFrame();
+                SyncEquipmentAnimationFrames();
             }
         }
         else
@@ -168,6 +163,7 @@ public partial class GodotPaperdollVisualizer : Node3D
             _currentWalkFrame = 0;
             _frameTimer = 0.0f;
             UpdateBaseBodyFrame();
+            SyncEquipmentAnimationFrames();
         }
     }
 
@@ -178,6 +174,7 @@ public partial class GodotPaperdollVisualizer : Node3D
         _currentWalkFrame = 0;
         _frameTimer = 0.0f;
         UpdateBaseBodyFrame();
+        SyncEquipmentAnimationFrames();
     }
 
     public void EquipItem(EquipmentSlot slot, string itemId)
@@ -205,6 +202,16 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         if (!_layers.TryGetValue("BaseBody", out var baseSprite)) return;
 
+        // Base Body Hiding (Body Suppression): If a full-cover suit/chest armor is equipped, suppress base body skin bleeding!
+        bool hasFullArmor = _equippedItems[EquipmentSlot.Chest] == "IronPlateChest";
+        if (hasFullArmor)
+        {
+            baseSprite.Visible = false; // Hide naked skin bleeding under full plate armor!
+            return;
+        }
+
+        baseSprite.Visible = true;
+
         if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
         {
             baseSprite.Texture = frames[_currentWalkFrame];
@@ -212,6 +219,20 @@ public partial class GodotPaperdollVisualizer : Node3D
         else if (_baseIdleTextures.TryGetValue(_currentDirection, out var idleTex) && idleTex != null)
         {
             baseSprite.Texture = idleTex;
+        }
+    }
+
+    private void SyncEquipmentAnimationFrames()
+    {
+        // Equipment Frame Synchronization: Synchronizes equipment layers with current step frame
+        foreach (var (slot, itemId) in _equippedItems)
+        {
+            string layerKey = slot.ToString();
+            if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
+
+            // Apply walking step offset to equipment layers so boots and armor step in sync!
+            float stepOffsetY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
+            layerSprite.Position = new Vector3(0f, 1.3f + stepOffsetY, 0f);
         }
     }
 
@@ -231,7 +252,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 continue;
             }
 
-            // 1. Try disk texture first
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
             bool loadedDisk = false;
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
@@ -246,7 +266,6 @@ public partial class GodotPaperdollVisualizer : Node3D
                 }
             }
 
-            // 2. If disk texture does not exist yet, fallback to procedural equipment placeholder!
             if (!loadedDisk)
             {
                 if (_placeholderTextures.TryGetValue(itemId, out var placeholderTex))
@@ -260,5 +279,7 @@ public partial class GodotPaperdollVisualizer : Node3D
                 }
             }
         }
+
+        SyncEquipmentAnimationFrames();
     }
 }
