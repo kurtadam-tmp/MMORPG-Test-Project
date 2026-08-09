@@ -2,7 +2,7 @@ using Godot;
 
 public partial class GodotPlayerVisualizer : Node3D
 {
-    [Export] public float MoveSpeed = 6.0f;
+    [Export] public float MoveSpeed = 8.0f;
     [Export] public string CharacterClass = "Warrior";
 
     private Camera3D _camera = null!;
@@ -82,13 +82,27 @@ public partial class GodotPlayerVisualizer : Node3D
         AddChild(nameTag);
     }
 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
+        // Smooth WASD & Arrow Key Movement
+        Vector3 moveDir = Vector3.Zero;
+
+        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up)) moveDir.Z -= 1f;
+        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down)) moveDir.Z += 1f;
+        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left)) moveDir.X -= 1f;
+        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right)) moveDir.X += 1f;
+
+        if (moveDir != Vector3.Zero)
+        {
+            moveDir = moveDir.Normalized();
+            GlobalPosition += moveDir * MoveSpeed * (float)delta;
+        }
+
         // Smooth Camera Follow
         if (_camera != null)
         {
             Vector3 targetPos = GlobalPosition + new Vector3(0f, 12f, 14f);
-            _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, (float)delta * 5.0f);
+            _camera.GlobalPosition = _camera.GlobalPosition.Lerp(targetPos, (float)delta * 8.0f);
             _camera.LookAt(GlobalPosition, Vector3.Up);
         }
     }
