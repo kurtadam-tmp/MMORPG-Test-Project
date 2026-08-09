@@ -32,6 +32,9 @@ public partial class GodotPaperdollVisualizer : Node3D
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
+    // Procedural Placeholder Textures for Equipment
+    private readonly Dictionary<string, Texture2D> _placeholderTextures = new();
+
     public override void _Ready()
     {
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
@@ -45,8 +48,76 @@ public partial class GodotPaperdollVisualizer : Node3D
         CreateLayerNode("MainHand", 0.0232f);
         CreateLayerNode("OffHand", 0.0234f);
 
+        CreateProceduralEquipmentPlaceholders();
         LoadBaseBodyTextures();
         RefreshAllEquipmentLayers();
+    }
+
+    private void CreateProceduralEquipmentPlaceholders()
+    {
+        // 1. Iron Sword Placeholder (Steel Blade + Gold Hilt)
+        _placeholderTextures["IronSword"] = CreateColoredPlaceholderTexture(new Color(0.9f, 0.95f, 1f), new Color(1f, 0.85f, 0.2f), "sword");
+
+        // 2. Leather Chest Armor Placeholder (Brown & Leather Gold Tunic Overlay)
+        _placeholderTextures["LeatherChest"] = CreateColoredPlaceholderTexture(new Color(0.6f, 0.35f, 0.15f), new Color(0.85f, 0.65f, 0.25f), "chest");
+
+        // 3. Iron Helmet Placeholder (Silver Steel Helm + Red Plume)
+        _placeholderTextures["IronHelm"] = CreateColoredPlaceholderTexture(new Color(0.75f, 0.8f, 0.85f), new Color(0.95f, 0.15f, 0.15f), "helm");
+
+        // 4. Tower Shield Placeholder (Cyan Glowing Shield)
+        _placeholderTextures["TowerShield"] = CreateColoredPlaceholderTexture(new Color(0f, 0.85f, 1f), new Color(0.1f, 0.2f, 0.4f), "shield");
+    }
+
+    private Texture2D CreateColoredPlaceholderTexture(Color mainColor, Color accentColor, string shapeType)
+    {
+        int width = 92;
+        int height = 92;
+        Image img = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+        img.Fill(new Color(0, 0, 0, 0)); // Transparent background
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (shapeType == "sword")
+                {
+                    // Draw Sword Blade on Right Side of Character Hand
+                    if (x >= 62 && x <= 68 && y >= 15 && y <= 65)
+                        img.SetPixel(x, y, mainColor);
+                    else if (x >= 55 && x <= 75 && y >= 65 && y <= 70)
+                        img.SetPixel(x, y, accentColor); // Hilt Guard
+                }
+                else if (shapeType == "chest")
+                {
+                    // Draw Armor Tunic Over Torso Area
+                    if (x >= 32 && x <= 60 && y >= 32 && y <= 58)
+                    {
+                        bool isBorder = (x == 32 || x == 60 || y == 32 || y == 58);
+                        img.SetPixel(x, y, isBorder ? accentColor : mainColor);
+                    }
+                }
+                else if (shapeType == "helm")
+                {
+                    // Draw Helmet Over Head Area
+                    if (x >= 30 && x <= 62 && y >= 8 && y <= 32)
+                    {
+                        bool isPlume = (y <= 14 && x >= 42 && x <= 50);
+                        img.SetPixel(x, y, isPlume ? accentColor : mainColor);
+                    }
+                }
+                else if (shapeType == "shield")
+                {
+                    // Draw Tower Shield on Left Side of Character Hand
+                    if (x >= 20 && x <= 34 && y >= 35 && y <= 68)
+                    {
+                        bool isEmblem = (x >= 25 && x <= 29 && y >= 45 && y <= 55);
+                        img.SetPixel(x, y, isEmblem ? mainColor : accentColor);
+                    }
+                }
+            }
+        }
+
+        return ImageTexture.CreateFromImage(img);
     }
 
     private void LoadBaseBodyTextures()
@@ -55,11 +126,9 @@ public partial class GodotPaperdollVisualizer : Node3D
 
         foreach (string d in dirs)
         {
-            // Idle Texture
             Texture2D idleTex = GD.Load<Texture2D>($"res://Assets/Textures/BaseBody/Idle/{d}.png");
             if (idleTex != null) _baseIdleTextures[d] = idleTex;
 
-            // 6-Frame Walk Cycle Textures
             Texture2D[] walkFrames = new Texture2D[TotalWalkFrames];
             for (int f = 0; f < TotalWalkFrames; f++)
             {
@@ -162,7 +231,9 @@ public partial class GodotPaperdollVisualizer : Node3D
                 continue;
             }
 
+            // 1. Try disk texture first
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
+            bool loadedDisk = false;
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
                 string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
@@ -171,11 +242,23 @@ public partial class GodotPaperdollVisualizer : Node3D
                 {
                     layerSprite.Texture = equipTex;
                     layerSprite.Visible = true;
-                    continue;
+                    loadedDisk = true;
                 }
             }
 
-            layerSprite.Visible = true;
+            // 2. If disk texture does not exist yet, fallback to procedural equipment placeholder!
+            if (!loadedDisk)
+            {
+                if (_placeholderTextures.TryGetValue(itemId, out var placeholderTex))
+                {
+                    layerSprite.Texture = placeholderTex;
+                    layerSprite.Visible = true;
+                }
+                else
+                {
+                    layerSprite.Visible = true;
+                }
+            }
         }
     }
 }
