@@ -112,15 +112,15 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
             _hotbarPanel.AddChild(skillBtn);
         }
 
-        // 5. Inventory Panel (I) - Modular Paperdoll System
-        _inventoryPanel = new Panel { Size = new Vector2(400, 360), Position = new Vector2(1920 - 440, 220), Visible = false };
+        // 5. Inventory Panel (I) - Full 5-Piece Equipment Set
+        _inventoryPanel = new Panel { Size = new Vector2(400, 380), Position = new Vector2(1920 - 440, 220), Visible = false };
         AddChild(_inventoryPanel);
 
         Label invTitle = new Label { Text = "🎒 Envanter (Inventory) - [Kısayol: I]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#00f2fe") };
         _inventoryPanel.AddChild(invTitle);
 
-        string[] items = new string[] { "IronPlateChest", "IronSword", "IronHelm", "Health Potion (x15)" };
-        EquipmentSlot?[] itemSlots = new EquipmentSlot?[] { EquipmentSlot.Chest, EquipmentSlot.MainHand, EquipmentSlot.Head, null };
+        string[] items = new string[] { "IronHelm", "IronPlateChest", "IronLeggings", "IronBoots", "IronSword" };
+        EquipmentSlot[] itemSlots = new EquipmentSlot[] { EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Legs, EquipmentSlot.Boots, EquipmentSlot.MainHand };
 
         for (int i = 0; i < items.Length; i++)
         {
@@ -131,14 +131,11 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
             int capturedIdx = i;
             equipBtn.Pressed += () =>
             {
-                EquipmentSlot? slot = itemSlots[capturedIdx];
+                EquipmentSlot slot = itemSlots[capturedIdx];
                 string itemName = items[capturedIdx];
                 _chatLabel.Text += $"\n[color=#00e676][EQUIP][/color] Kuşanıldı: {itemName}";
-                if (slot.HasValue)
-                {
-                    GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot.Value, itemName);
-                    MMORPGGodotClient.Instance?.SendEquipItem(slot.Value.ToString(), itemName);
-                }
+                GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot, itemName);
+                MMORPGGodotClient.Instance?.SendEquipItem(slot.ToString(), itemName);
             };
             _inventoryPanel.AddChild(equipBtn);
 

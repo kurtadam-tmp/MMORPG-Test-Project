@@ -47,7 +47,25 @@ public static class PaperdollRegistry
             TextureResourcePattern = "res://Assets/Textures/Paperdoll/Armor/IronPlateChest/{dir}.png"
         },
 
-        // Helmets
+        // Leggings (Legs)
+        ["IronLeggings"] = new PaperdollLayerInfo
+        {
+            ItemId = "IronLeggings",
+            Slot = EquipmentSlot.Legs,
+            RenderOrder = 3,
+            TextureResourcePattern = "res://Assets/Textures/Paperdoll/Legs/IronLeggings/{dir}.png"
+        },
+
+        // Boots (Footwear)
+        ["IronBoots"] = new PaperdollLayerInfo
+        {
+            ItemId = "IronBoots",
+            Slot = EquipmentSlot.Boots,
+            RenderOrder = 2,
+            TextureResourcePattern = "res://Assets/Textures/Paperdoll/Boots/IronBoots/{dir}.png"
+        },
+
+        // Helmets (Head)
         ["IronHelm"] = new PaperdollLayerInfo
         {
             ItemId = "IronHelm",
@@ -56,7 +74,7 @@ public static class PaperdollRegistry
             TextureResourcePattern = "res://Assets/Textures/Paperdoll/Head/IronHelm/{dir}.png"
         },
 
-        // Shields
+        // Shields (OffHand)
         ["TowerShield"] = new PaperdollLayerInfo
         {
             ItemId = "TowerShield",
