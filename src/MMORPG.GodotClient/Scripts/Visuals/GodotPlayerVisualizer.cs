@@ -151,16 +151,22 @@ public partial class GodotPlayerVisualizer : Node3D
 
     private void UpdateDirection(Vector3 moveDir)
     {
+        if (moveDir.LengthSquared() < 0.01f) return;
+
+        // 360-Degree 8-Sector Direction Calculation (45 degrees per sector)
+        float angleDeg = Mathf.RadToDeg(Mathf.Atan2(moveDir.X, moveDir.Z));
+        if (angleDeg < 0) angleDeg += 360f;
+
         string newDir = "south";
 
-        if (moveDir.Z > 0.3f && Mathf.Abs(moveDir.X) < 0.3f) newDir = "south";
-        else if (moveDir.Z < -0.3f && Mathf.Abs(moveDir.X) < 0.3f) newDir = "north";
-        else if (moveDir.X > 0.3f && Mathf.Abs(moveDir.Z) < 0.3f) newDir = "east";
-        else if (moveDir.X < -0.3f && Mathf.Abs(moveDir.Z) < 0.3f) newDir = "west";
-        else if (moveDir.Z > 0f && moveDir.X > 0f) newDir = "south-east";
-        else if (moveDir.Z > 0f && moveDir.X < 0f) newDir = "south-west";
-        else if (moveDir.Z < 0f && moveDir.X > 0f) newDir = "north-east";
-        else if (moveDir.Z < 0f && moveDir.X < 0f) newDir = "north-west";
+        if (angleDeg >= 337.5f || angleDeg < 22.5f) newDir = "south";
+        else if (angleDeg >= 22.5f && angleDeg < 67.5f) newDir = "south-east";
+        else if (angleDeg >= 67.5f && angleDeg < 112.5f) newDir = "east";
+        else if (angleDeg >= 112.5f && angleDeg < 157.5f) newDir = "north-east";
+        else if (angleDeg >= 157.5f && angleDeg < 202.5f) newDir = "north";
+        else if (angleDeg >= 202.5f && angleDeg < 247.5f) newDir = "north-west";
+        else if (angleDeg >= 247.5f && angleDeg < 292.5f) newDir = "west";
+        else if (angleDeg >= 292.5f && angleDeg < 337.5f) newDir = "south-west";
 
         _paperdoll?.UpdateDirection(newDir);
     }
