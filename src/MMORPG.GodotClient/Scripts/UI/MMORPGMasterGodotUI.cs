@@ -136,6 +136,7 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
                 if (slot != "none")
                 {
                     GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot, itemName);
+                    MMORPGGodotClient.Instance?.SendEquipItem(slot, itemName);
                 }
             };
             _inventoryPanel.AddChild(equipBtn);

@@ -5,3 +5,4 @@ res://Scripts/UI/MMORPGMasterGodotUI.cs
 res://Scripts/Network/MMORPGGodotClient.cs
 res://Scripts/UI/MMORPGSceneAutoInitializer.cs
 res://Scripts/Visuals/GodotBossVisualizer.cs
+res://Scripts/Visuals/GodotPaperdollVisualizer.cs

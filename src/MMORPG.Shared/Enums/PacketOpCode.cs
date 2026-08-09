@@ -9,5 +9,9 @@ public enum PacketOpCode : byte
     MovementValidation = 0x04,
     CastSkill = 0x05,
     CombatResult = 0x06,
-    ChatMessage = 0x07
+    ChatMessage = 0x07,
+    EquipItemRequest = 0x08,
+    EquipItemBroadcast = 0x09,
+    UnequipItemRequest = 0x0A,
+    UnequipItemBroadcast = 0x0B
 }

@@ -82,6 +82,28 @@ public partial class MMORPGGodotClient : Node
         }
     }
 
+    public void SendEquipItem(string slot, string itemId)
+    {
+        if (_isConnected)
+        {
+            string payload = $"EQUIP|{CharacterId}|{slot}|{itemId}";
+            byte[] bytes = Encoding.UTF8.GetBytes(payload);
+            _udpClient?.Send(bytes, bytes.Length);
+            GD.Print($"[MMORPGGodotClient] EQUIP Packet Sent -> Slot: {slot}, Item: {itemId}");
+        }
+    }
+
+    public void SendUnequipItem(string slot)
+    {
+        if (_isConnected)
+        {
+            string payload = $"UNEQUIP|{CharacterId}|{slot}";
+            byte[] bytes = Encoding.UTF8.GetBytes(payload);
+            _udpClient?.Send(bytes, bytes.Length);
+            GD.Print($"[MMORPGGodotClient] UNEQUIP Packet Sent -> Slot: {slot}");
+        }
+    }
+
     private void SendHandshakePacket()
     {
         string payload = $"HANDSHAKE|{CharacterId}|{HandoffToken}";
