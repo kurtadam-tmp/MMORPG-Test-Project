@@ -1,0 +1,15 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1786257740
+README_GODOT_SETUP.md::TextFile::-1::1786257388::0::1::::<><>::
+::res://Scenes/::1786257369
+MainWorld.tscn::PackedScene::-1::1786257369::0::1::::<><>::res://Scripts/UI/MMORPGSceneAutoInitializer.cs
+::res://Scripts/::1786257382
+::res://Scripts/Network/::1786257371
+MMORPGGodotClient.cs::CSharpScript::-1::1786257448::0::1::::<>Node<>::
+::res://Scripts/UI/::1786257385
+MMORPGMasterGodotUI.cs::CSharpScript::-1::1786257445::0::1::::<>Control<>::
+MMORPGSceneAutoInitializer.cs::CSharpScript::-1::1786257385::0::1::::<>Node<>::
+::res://Scripts/Visuals/::1786257379
+GodotBossVisualizer.cs::CSharpScript::-1::1786257439::0::1::::<>Node3D<>::
+GodotPlayerVisualizer.cs::CSharpScript::-1::1786257442::0::1::::<>Node3D<>::
+GodotZonePortalVisualizer.cs::CSharpScript::-1::1786257437::0::1::::<>Node3D<>::

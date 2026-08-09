@@ -1,8 +1,58 @@
-[gd_scene load_steps=2 format=3 uid="uid://mmorpg_world_scene_2026"]
+[gd_scene load_steps=10 format=3 uid="uid://mmorpg_world_scene_2026"]
 
-[ext_resource type="Script" path="res://Scripts/UI/MMORPGSceneAutoInitializer.cs" id="1_initializer"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerVisualizer.cs" id="1_player"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotBossVisualizer.cs" id="2_boss"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotZonePortalVisualizer.cs" id="3_portal"]
+[ext_resource type="Script" path="res://Scripts/Network/MMORPGGodotClient.cs" id="4_net"]
+[ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="5_ui"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.12, 0.22, 0.38, 1)
+sky_horizon_color = Color(0.4, 0.5, 0.6, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_world"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.8, 0.85, 0.9, 1)
+ambient_light_energy = 1.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(60, 60)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+albedo_color = Color(0.12, 0.18, 0.25, 1)
 
 [node name="MainWorld" type="Node3D"]
 
-[node name="SceneAutoInitializer" type="Node" parent="."]
-script = ExtResource("1_initializer")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_world")
+
+[node name="DirectionalSun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 15, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 1.2
+
+[node name="GroundPlane" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="PlayerCharacter" type="Node3D" parent="."]
+script = ExtResource("1_player")
+
+[node name="WorldBoss_Ignis" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -12)
+script = ExtResource("2_boss")
+
+[node name="ZonePortal_Shadowfen" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+script = ExtResource("3_portal")
+
+[node name="MMORPGGodotClient" type="Node" parent="."]
+script = ExtResource("4_net")
+
+[node name="MMORPGMasterUI" type="CanvasLayer" parent="."]
+script = ExtResource("5_ui")
