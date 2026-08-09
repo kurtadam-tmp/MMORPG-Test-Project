@@ -111,14 +111,16 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
             _hotbarPanel.AddChild(skillBtn);
         }
 
-        // 5. Inventory Panel (I)
+        // 5. Inventory Panel (I) - Paperdoll Integration
         _inventoryPanel = new Panel { Size = new Vector2(400, 360), Position = new Vector2(1920 - 440, 220), Visible = false };
         AddChild(_inventoryPanel);
 
         Label invTitle = new Label { Text = "🎒 Envanter (Inventory) - [Kısayol: I]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#00f2fe") };
         _inventoryPanel.AddChild(invTitle);
 
-        string[] items = new string[] { "Iron Sword +5", "Leather Chest +3", "Health Potion (x15)", "Mana Elixir (x10)" };
+        string[] items = new string[] { "Iron Sword +5", "Leather Chest +3", "Iron Helmet +2", "Health Potion (x15)" };
+        string[] itemSlots = new string[] { "mainhand", "chest", "head", "none" };
+
         for (int i = 0; i < items.Length; i++)
         {
             Label itemLbl = new Label { Text = items[i], Position = new Vector2(20, 50 + (i * 45)) };
@@ -126,7 +128,16 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
 
             Button equipBtn = new Button { Text = "Kuşan", Size = new Vector2(60, 30), Position = new Vector2(230, 45 + (i * 45)) };
             int capturedIdx = i;
-            equipBtn.Pressed += () => _chatLabel.Text += $"\n[color=#00e676][EQUIP][/color] Kuşanıldı: {items[capturedIdx]}";
+            equipBtn.Pressed += () =>
+            {
+                string slot = itemSlots[capturedIdx];
+                string itemName = items[capturedIdx];
+                _chatLabel.Text += $"\n[color=#00e676][EQUIP][/color] Kuşanıldı: {itemName}";
+                if (slot != "none")
+                {
+                    GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot, itemName);
+                }
+            };
             _inventoryPanel.AddChild(equipBtn);
 
             Button enhanceBtn = new Button { Text = "Bas", Size = new Vector2(50, 30), Position = new Vector2(300, 45 + (i * 45)) };
@@ -138,7 +149,7 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
         _statsPanel = new Panel { Size = new Vector2(400, 380), Position = new Vector2(1920 - 860, 220), Visible = false };
         AddChild(_statsPanel);
 
-        Label statsTitle = new Label { Text = "👤 Ekipman & Statlar - [Kısayol: C]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#ffd700") };
+        Label statsTitle = new Label { Text = "👤 Ekipman Paperdoll & Statlar - [Kısayol: C]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#ffd700") };
         _statsPanel.AddChild(statsTitle);
 
         Label pointsLbl = new Label { Text = $"Boş Stat Puanı: {_unallocatedPoints}", Position = new Vector2(20, 45), Modulate = Color.FromHtml("#ffee55") };
