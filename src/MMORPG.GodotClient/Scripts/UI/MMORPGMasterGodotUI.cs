@@ -119,8 +119,8 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
         Label invTitle = new Label { Text = "🎒 Envanter (Inventory) - [Kısayol: I]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#00f2fe") };
         _inventoryPanel.AddChild(invTitle);
 
-        string[] items = new string[] { "IronHelm", "IronPlateChest", "IronLeggings", "IronBoots", "IronSword" };
-        EquipmentSlot[] itemSlots = new EquipmentSlot[] { EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Legs, EquipmentSlot.Boots, EquipmentSlot.MainHand };
+        string[] items = new string[] { "IronHelm", "ScaleMailChest", "IronPlateChest", "IronLeggings", "IronBoots", "IronSword" };
+        EquipmentSlot[] itemSlots = new EquipmentSlot[] { EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Chest, EquipmentSlot.Legs, EquipmentSlot.Boots, EquipmentSlot.MainHand };
 
         for (int i = 0; i < items.Length; i++)
         {

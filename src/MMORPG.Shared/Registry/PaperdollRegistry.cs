@@ -46,6 +46,13 @@ public static class PaperdollRegistry
             RenderOrder = 5,
             TextureResourcePattern = "res://Assets/Textures/Paperdoll/Armor/IronPlateChest/{dir}.png"
         },
+        ["ScaleMailChest"] = new PaperdollLayerInfo
+        {
+            ItemId = "ScaleMailChest",
+            Slot = EquipmentSlot.Chest,
+            RenderOrder = 5,
+            TextureResourcePattern = "res://Assets/Textures/Paperdoll/Armor/ScaleMailChest/{dir}.png"
+        },
 
         // Leggings (Legs)
         ["IronLeggings"] = new PaperdollLayerInfo
