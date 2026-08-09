@@ -2,18 +2,20 @@
 
 ## System Architecture Summary
 - **Architecture Standard**: Clean Architecture (Domain -> Application -> Infrastructure -> Gateway/Server)
-- **Framework**: .NET 10.0 / C# 13, PostgreSQL, Redis, SignalR / WebSockets, Unity 2D/3D Client
+- **Framework**: .NET 10.0 / C# 13, PostgreSQL, Redis, SignalR / WebSockets, Godot 4.3 .NET Mono Client
+- **Game Engine**: **Godot Engine 4.3 (.NET Mono C# Edition)** (Extracted to `C:\Godot`)
 - **GitHub Repository (Live)**: [`https://github.com/kurtadam-tmp/MMORPG-Test-Project`](https://github.com/kurtadam-tmp/MMORPG-Test-Project)
-- **Production Deployment Assets**:
-  - `docker-compose.yml`: Multi-container orchestration (PostgreSQL 16, Redis 7.2, GatewayApi, MasterServer)
-  - `init-db.sql`: Production PostgreSQL schema initializer (Players, Characters, Inventories tables and indexes)
-  - `src/MMORPG.GatewayApi/Dockerfile`: Multi-stage Docker build for REST API & CMS Web Editor
-  - `src/MMORPG.MasterServer/Dockerfile`: Multi-stage Docker build for Master Cluster Node Coordinator
-  - `deploy-prod.ps1`: Automated PowerShell deployment script with container health checks & test execution
-- **Live Web Player Dashboard**:
-  - [`index.html`](file:///c:/Projects/Antigravity/MMORPG-Test-Project/src/MMORPG.GatewayApi/wwwroot/index.html): Integrated 2D Radar, Equipment Paperdoll Slots, Stat Point Allocation (STR, AGI, INT, VIT), PvP Arena, Item Forging (+9 Basma), Mailbox COD, Weather & Mounts.
+- **Godot Client Directory**:
+  - `src/MMORPG.GodotClient/project.godot`: Godot 4.3 engine configuration
+  - `src/MMORPG.GodotClient/MMORPG.GodotClient.csproj`: Godot C# project targeting `.NET 10.0`
+  - `src/MMORPG.GodotClient/Scenes/MainWorld.tscn`: Godot 2.5D main scene
+  - `src/MMORPG.GodotClient/Scripts/Network/MMORPGGodotClient.cs`: Godot C# 30 Hz UDP Socket Network Manager
+  - `src/MMORPG.GodotClient/Scripts/UI/MMORPGMasterGodotUI.cs`: Godot C# Master UI Manager (Hotkeys: `I`, `C`, `E`, `M`, `ESC`)
+  - `src/MMORPG.GodotClient/Scripts/UI/MMORPGSceneAutoInitializer.cs`: Automatic Godot 2.5D scene tree initializers
+  - `src/MMORPG.GodotClient/Scripts/Visuals/GodotPlayerVisualizer.cs`: 2.5D 45-degree isometric Node3D player controller & Camera3D follow
+  - `src/MMORPG.GodotClient/Scripts/Visuals/GodotBossVisualizer.cs`: World Boss Ignis (Phase 1-2-3 Telegraph)
+  - `src/MMORPG.GodotClient/Scripts/Visuals/GodotZonePortalVisualizer.cs`: Glowing 2.5D Zone Portal Archway
 
-## Security & Package Dependency Audit
-- **Official Package Upgrade**: Upgraded `Microsoft.AspNetCore.OpenApi` to patched stable version `9.0.2` and `Microsoft.OpenApi` to `1.6.22` (eliminates `GHSA-v5pm-xwqc-g5wc` vulnerability at the source level without suppressing warnings).
+## Security & Build Status
 - **Build Status**: `Build Succeeded. 0 Warning(s), 0 Error(s) | Unit Tests: 7/7 Passed (%100 Success)`
 - **Solution File**: [`src/MMORPG.slnx`](file:///c:/Projects/Antigravity/MMORPG-Test-Project/src/MMORPG.slnx)
