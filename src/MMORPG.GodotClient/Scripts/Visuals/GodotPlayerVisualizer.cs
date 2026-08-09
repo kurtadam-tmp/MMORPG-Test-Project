@@ -12,7 +12,7 @@ public partial class GodotPlayerVisualizer : Node3D
     public override void _Ready()
     {
         // 1. Setup 2.5D Isometric 45-Degree Camera3D
-        _camera = GetViewport().GetCamera3D();
+        _camera = GetViewport()?.GetCamera3D()!;
         if (_camera == null)
         {
             _camera = new Camera3D();
@@ -21,12 +21,17 @@ public partial class GodotPlayerVisualizer : Node3D
         }
 
         _camera.Projection = Camera3D.ProjectionType.Orthogonal;
-        _camera.Size = 12.0f;
+        _camera.Size = 14.0f;
         _camera.RotationDegrees = new Vector3(-45f, 45f, 0f);
+        _camera.Current = true; // Make camera active
 
-        // 2. Build Hero Visual Mesh (Stylized Cylinder/Box Avatar)
+        // Position camera initially
+        _camera.GlobalPosition = GlobalPosition + new Vector3(-10f, 14f, 10f);
+
+        // 2. Build Hero Visual Mesh (Stylized Cylinder Avatar)
         _heroMesh = new MeshInstance3D();
         _heroMesh.Mesh = new CylinderMesh { TopRadius = 0.5f, BottomRadius = 0.5f, Height = 1.8f };
+        _heroMesh.Position = new Vector3(0f, 0.9f, 0f);
         AddChild(_heroMesh);
 
         ApplyClassColor(CharacterClass);
@@ -59,7 +64,7 @@ public partial class GodotPlayerVisualizer : Node3D
 
         StandardMaterial3D mat = new StandardMaterial3D 
         { 
-            AlbedoColor = new Color(1f, 1f, 1f, 0.3f),
+            AlbedoColor = new Color(0f, 0.95f, 1f, 0.4f),
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha
         };
         _auraMesh.MaterialOverride = mat;
