@@ -22,20 +22,22 @@ class Program
         string clientRoot = @"C:\Projects\Antigravity\MMORPG-Test-Project\src\MMORPG.GodotClient\Assets\Textures";
         string lpcRoot = @"C:\Projects\Antigravity\tools\lpc_generator\spritesheets";
 
-        Console.WriteLine("[LPC Exporter] Beginning full LPC Base Body & 5-Piece Equipment Extraction...");
+        Console.WriteLine("[LPC Exporter] Beginning Composite LPC Base Body (Body + Head) & 5 Equipment Sets Extraction...");
 
-        // 1. Extract LPC Base Body (Walking 6-frames and Idle)
+        // 1. Extract Complete Composite LPC Base Body (Body Torso + Human Head)
         string bodyWalkSheet = Path.Combine(lpcRoot, @"body\bodies\male\walk.png");
+        string headWalkSheet = Path.Combine(lpcRoot, @"head\heads\human\male\walk.png");
         string bodyIdleSheet = Path.Combine(lpcRoot, @"body\bodies\male\idle.png");
+        string headIdleSheet = Path.Combine(lpcRoot, @"head\heads\human\male\idle.png");
 
-        if (File.Exists(bodyWalkSheet))
+        if (File.Exists(bodyWalkSheet) && File.Exists(headWalkSheet))
         {
-            ExtractBaseBodyWalkFrames(bodyWalkSheet, Path.Combine(clientRoot, "BaseBody/Walking"));
+            ExtractCompositeBaseBodyWalkFrames(bodyWalkSheet, headWalkSheet, Path.Combine(clientRoot, "BaseBody/Walking"));
         }
 
-        if (File.Exists(bodyIdleSheet))
+        if (File.Exists(bodyIdleSheet) && File.Exists(headIdleSheet))
         {
-            ExtractBaseBodyIdleFrames(bodyIdleSheet, Path.Combine(clientRoot, "BaseBody/Idle"));
+            ExtractCompositeBaseBodyIdleFrames(bodyIdleSheet, headIdleSheet, Path.Combine(clientRoot, "BaseBody/Idle"));
         }
 
         // 2. Extract 5 Equipment Sets into Paperdoll Folder
@@ -64,14 +66,15 @@ class Program
         Console.WriteLine("[LPC Exporter] ALL EXTRACTIONS COMPLETED SUCCESSFULLY!");
     }
 
-    private static void ExtractBaseBodyWalkFrames(string sheetPath, string outBaseFolder)
+    private static void ExtractCompositeBaseBodyWalkFrames(string bodySheetPath, string headSheetPath, string outBaseFolder)
     {
-        using (Bitmap fullSheet = new Bitmap(sheetPath))
+        using (Bitmap bodySheet = new Bitmap(bodySheetPath))
+        using (Bitmap headSheet = new Bitmap(headSheetPath))
         {
             foreach (var (dirName, startY) in WalkRowY)
             {
                 int y = startY;
-                if (y + FrameSize > fullSheet.Height) y = 0;
+                if (y + FrameSize > bodySheet.Height) y = 0;
 
                 string dirFolder = Path.Combine(outBaseFolder, dirName);
                 Directory.CreateDirectory(dirFolder);
@@ -83,7 +86,9 @@ class Program
                     {
                         using (Graphics g = Graphics.FromImage(frameImg))
                         {
-                            g.DrawImage(fullSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
+                            // Draw Body first, then Composite Head on top
+                            g.DrawImage(bodySheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
+                            g.DrawImage(headSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
                         }
 
                         string framePath = Path.Combine(dirFolder, $"frame_00{f}.png");
@@ -93,30 +98,32 @@ class Program
             }
         }
 
-        // Synthesize 4 Diagonal Base Body Directions
+        // Synthesize 4 Diagonal Composite Base Body Directions
         SynthesizeDiagonalWalkFrames(outBaseFolder, "east", "south", "south-east");
         SynthesizeDiagonalWalkFrames(outBaseFolder, "east", "north", "north-east");
         SynthesizeDiagonalWalkFrames(outBaseFolder, "west", "north", "north-west");
         SynthesizeDiagonalWalkFrames(outBaseFolder, "west", "south", "south-west");
     }
 
-    private static void ExtractBaseBodyIdleFrames(string sheetPath, string outBaseFolder)
+    private static void ExtractCompositeBaseBodyIdleFrames(string bodySheetPath, string headSheetPath, string outBaseFolder)
     {
         Directory.CreateDirectory(outBaseFolder);
 
-        using (Bitmap fullSheet = new Bitmap(sheetPath))
+        using (Bitmap bodySheet = new Bitmap(bodySheetPath))
+        using (Bitmap headSheet = new Bitmap(headSheetPath))
         {
             foreach (var (dirName, startY) in WalkRowY)
             {
                 int y = startY;
-                if (y + FrameSize > fullSheet.Height) y = 0;
+                if (y + FrameSize > bodySheet.Height) y = 0;
 
                 Rectangle cropRect = new Rectangle(0, y, FrameSize, FrameSize);
                 using (Bitmap frameImg = new Bitmap(FrameSize, FrameSize, PixelFormat.Format32bppArgb))
                 {
                     using (Graphics g = Graphics.FromImage(frameImg))
                     {
-                        g.DrawImage(fullSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
+                        g.DrawImage(bodySheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
+                        g.DrawImage(headSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
                     }
 
                     string framePath = Path.Combine(outBaseFolder, $"{dirName}.png");
