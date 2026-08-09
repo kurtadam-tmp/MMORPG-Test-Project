@@ -10,12 +10,12 @@ public partial class GodotPaperdollVisualizer : Node3D
     // 10 Modular Paperdoll Sprite3D Layers ordered by Z-Depth
     private readonly Dictionary<string, Sprite3D> _layers = new();
 
-    // Equipment State Storage: Slot -> ItemId
+    // Equipment State Storage: Slot -> ItemId (Default: Completely Naked)
     private readonly Dictionary<EquipmentSlot, string> _equippedItems = new()
     {
         [EquipmentSlot.Head] = "None",
         [EquipmentSlot.Chest] = "None",
-        [EquipmentSlot.Legs] = "IronLeggings",
+        [EquipmentSlot.Legs] = "None",
         [EquipmentSlot.Boots] = "None",
         [EquipmentSlot.MainHand] = "None",
         [EquipmentSlot.OffHand] = "None"
@@ -34,26 +34,12 @@ public partial class GodotPaperdollVisualizer : Node3D
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
-    // Base Y Position Offsets per Layer for Perfect Waist/Head Alignment
-    // BaseBody (92x92px) sits at 1.30f. 64x64px LPC layers sit at 1.48f for perfect hip alignment.
-    private static readonly Dictionary<string, Vector3> LayerBasePositions = new()
-    {
-        ["Shadow"]   = new Vector3(0.00f, 1.30f, 0f),
-        ["BaseBody"] = new Vector3(0.00f, 1.30f, 0f),
-        ["Boots"]    = new Vector3(0.00f, 1.48f, 0f),
-        ["Legs"]     = new Vector3(0.00f, 1.48f, 0f),
-        ["Chest"]    = new Vector3(0.00f, 1.48f, 0f),
-        ["Cape"]     = new Vector3(0.00f, 1.48f, 0f),
-        ["Head"]     = new Vector3(0.00f, 1.48f, 0f),
-        ["MainHand"] = new Vector3(0.00f, 1.48f, 0f),
-        ["OffHand"]  = new Vector3(0.00f, 1.48f, 0f)
-    };
-
     public override void _Ready()
     {
         Instance = this;
 
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
+        // Native 64x64px LPC Engine: All layers share exact same center pivot (Position Y = 1.30f)
         CreateLayerNode("Shadow", 0.0210f);
         CreateLayerNode("BaseBody", 0.0220f);
         CreateLayerNode("Boots", 0.0222f);
@@ -93,16 +79,7 @@ public partial class GodotPaperdollVisualizer : Node3D
         sprite.Name = $"PaperdollLayer_{layerKey}";
         sprite.PixelSize = pixelSize;
         sprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
-        
-        if (LayerBasePositions.TryGetValue(layerKey, out var basePos))
-        {
-            sprite.Position = basePos;
-        }
-        else
-        {
-            sprite.Position = new Vector3(0f, 1.30f, 0f);
-        }
-
+        sprite.Position = new Vector3(0f, 1.30f, 0f);
         AddChild(sprite);
         _layers[layerKey] = sprite;
         return sprite;
@@ -144,14 +121,14 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[Paperdoll Alignment Engine] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Native LPC Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[Paperdoll Alignment Engine] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Native LPC Paperdoll Engine] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
@@ -179,18 +156,13 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void SyncEquipmentAnimationFrames()
     {
-        // Torso/Waist Bobbing Alignment: Applies subtle 0.02f Y bobbing during walk steps
-        float walkBobY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.02f : 0f;
-
+        // Native 64x64px LPC Engine: Base body and equipment move in 1-to-1 lockstep
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
             if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
 
-            if (LayerBasePositions.TryGetValue(layerKey, out var basePos))
-            {
-                layerSprite.Position = new Vector3(basePos.X, basePos.Y + walkBobY, basePos.Z);
-            }
+            layerSprite.Position = new Vector3(0f, 1.30f, 0f);
         }
     }
 
