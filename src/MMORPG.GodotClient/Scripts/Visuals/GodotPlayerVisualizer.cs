@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using MMORPG.Shared.Enums;
 
 public partial class GodotPlayerVisualizer : Node3D
 {
@@ -41,12 +42,12 @@ public partial class GodotPlayerVisualizer : Node3D
         CreateOverheadNameTag();
     }
 
-    public void EquipPaperdollItem(string slot, string itemId)
+    public void EquipPaperdollItem(EquipmentSlot slot, string itemId)
     {
         _paperdoll?.EquipItem(slot, itemId);
     }
 
-    public void UnequipPaperdollItem(string slot)
+    public void UnequipPaperdollItem(EquipmentSlot slot)
     {
         _paperdoll?.UnequipItem(slot);
     }

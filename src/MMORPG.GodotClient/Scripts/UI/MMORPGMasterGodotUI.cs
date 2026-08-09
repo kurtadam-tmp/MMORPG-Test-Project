@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using MMORPG.Shared.Enums;
 
 public partial class MMORPGMasterGodotUI : CanvasLayer
 {
@@ -111,15 +112,15 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
             _hotbarPanel.AddChild(skillBtn);
         }
 
-        // 5. Inventory Panel (I) - Paperdoll Integration
+        // 5. Inventory Panel (I) - Modular Paperdoll System
         _inventoryPanel = new Panel { Size = new Vector2(400, 360), Position = new Vector2(1920 - 440, 220), Visible = false };
         AddChild(_inventoryPanel);
 
         Label invTitle = new Label { Text = "🎒 Envanter (Inventory) - [Kısayol: I]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#00f2fe") };
         _inventoryPanel.AddChild(invTitle);
 
-        string[] items = new string[] { "Iron Sword +5", "Leather Chest +3", "Iron Helmet +2", "Health Potion (x15)" };
-        string[] itemSlots = new string[] { "mainhand", "chest", "head", "none" };
+        string[] items = new string[] { "IronSword", "LeatherChest", "IronHelm", "Health Potion (x15)" };
+        EquipmentSlot?[] itemSlots = new EquipmentSlot?[] { EquipmentSlot.MainHand, EquipmentSlot.Chest, EquipmentSlot.Head, null };
 
         for (int i = 0; i < items.Length; i++)
         {
@@ -130,13 +131,13 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
             int capturedIdx = i;
             equipBtn.Pressed += () =>
             {
-                string slot = itemSlots[capturedIdx];
+                EquipmentSlot? slot = itemSlots[capturedIdx];
                 string itemName = items[capturedIdx];
                 _chatLabel.Text += $"\n[color=#00e676][EQUIP][/color] Kuşanıldı: {itemName}";
-                if (slot != "none")
+                if (slot.HasValue)
                 {
-                    GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot, itemName);
-                    MMORPGGodotClient.Instance?.SendEquipItem(slot, itemName);
+                    GodotPlayerVisualizer.Instance?.EquipPaperdollItem(slot.Value, itemName);
+                    MMORPGGodotClient.Instance?.SendEquipItem(slot.Value.ToString(), itemName);
                 }
             };
             _inventoryPanel.AddChild(equipBtn);
@@ -150,7 +151,7 @@ public partial class MMORPGMasterGodotUI : CanvasLayer
         _statsPanel = new Panel { Size = new Vector2(400, 380), Position = new Vector2(1920 - 860, 220), Visible = false };
         AddChild(_statsPanel);
 
-        Label statsTitle = new Label { Text = "👤 Ekipman Paperdoll & Statlar - [Kısayol: C]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#ffd700") };
+        Label statsTitle = new Label { Text = "👤 Modüler Paperdoll & Statlar - [Kısayol: C]", Position = new Vector2(15, 15), Modulate = Color.FromHtml("#ffd700") };
         _statsPanel.AddChild(statsTitle);
 
         Label pointsLbl = new Label { Text = $"Boş Stat Puanı: {_unallocatedPoints}", Position = new Vector2(20, 45), Modulate = Color.FromHtml("#ffee55") };
