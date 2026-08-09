@@ -32,8 +32,8 @@ public partial class GodotPaperdollVisualizer : Node3D
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
-    // Procedural Placeholder Textures for Equipment
-    private readonly Dictionary<string, Texture2D> _placeholderTextures = new();
+    // Isolated Equipment Textures Cache: Slot_ItemId_Direction -> Texture2D
+    private readonly Dictionary<string, Texture2D> _isolatedEquipCache = new();
 
     public override void _Ready()
     {
@@ -48,70 +48,8 @@ public partial class GodotPaperdollVisualizer : Node3D
         CreateLayerNode("MainHand", 0.0232f);
         CreateLayerNode("OffHand", 0.0234f);
 
-        CreateProceduralEquipmentPlaceholders();
         LoadBaseBodyTextures();
         RefreshAllEquipmentLayers();
-    }
-
-    private void CreateProceduralEquipmentPlaceholders()
-    {
-        // 1. Iron Sword Placeholder
-        _placeholderTextures["IronSword"] = CreateColoredPlaceholderTexture(new Color(0.9f, 0.95f, 1f), new Color(1f, 0.85f, 0.2f), "sword");
-
-        // 2. Leather Chest Armor Placeholder
-        _placeholderTextures["LeatherChest"] = CreateColoredPlaceholderTexture(new Color(0.6f, 0.35f, 0.15f), new Color(0.85f, 0.65f, 0.25f), "chest");
-
-        // 3. Iron Helmet Placeholder
-        _placeholderTextures["IronHelm"] = CreateColoredPlaceholderTexture(new Color(0.75f, 0.8f, 0.85f), new Color(0.95f, 0.15f, 0.15f), "helm");
-
-        // 4. Tower Shield Placeholder
-        _placeholderTextures["TowerShield"] = CreateColoredPlaceholderTexture(new Color(0f, 0.85f, 1f), new Color(0.1f, 0.2f, 0.4f), "shield");
-    }
-
-    private Texture2D CreateColoredPlaceholderTexture(Color mainColor, Color accentColor, string shapeType)
-    {
-        int width = 92;
-        int height = 92;
-        Image img = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
-        img.Fill(new Color(0, 0, 0, 0));
-
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                if (shapeType == "sword")
-                {
-                    if (x >= 62 && x <= 68 && y >= 15 && y <= 65) img.SetPixel(x, y, mainColor);
-                    else if (x >= 55 && x <= 75 && y >= 65 && y <= 70) img.SetPixel(x, y, accentColor);
-                }
-                else if (shapeType == "chest")
-                {
-                    if (x >= 32 && x <= 60 && y >= 32 && y <= 58)
-                    {
-                        bool isBorder = (x == 32 || x == 60 || y == 32 || y == 58);
-                        img.SetPixel(x, y, isBorder ? accentColor : mainColor);
-                    }
-                }
-                else if (shapeType == "helm")
-                {
-                    if (x >= 30 && x <= 62 && y >= 8 && y <= 32)
-                    {
-                        bool isPlume = (y <= 14 && x >= 42 && x <= 50);
-                        img.SetPixel(x, y, isPlume ? accentColor : mainColor);
-                    }
-                }
-                else if (shapeType == "shield")
-                {
-                    if (x >= 20 && x <= 34 && y >= 35 && y <= 68)
-                    {
-                        bool isEmblem = (x >= 25 && x <= 29 && y >= 45 && y <= 55);
-                        img.SetPixel(x, y, isEmblem ? mainColor : accentColor);
-                    }
-                }
-            }
-        }
-
-        return ImageTexture.CreateFromImage(img);
     }
 
     private void LoadBaseBodyTextures()
@@ -202,15 +140,7 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         if (!_layers.TryGetValue("BaseBody", out var baseSprite)) return;
 
-        // Base Body Hiding (Body Suppression): If a full-cover suit/chest armor is equipped, suppress base body skin bleeding!
-        bool hasFullArmor = _equippedItems[EquipmentSlot.Chest] == "IronPlateChest";
-        if (hasFullArmor)
-        {
-            baseSprite.Visible = false; // Hide naked skin bleeding under full plate armor!
-            return;
-        }
-
-        baseSprite.Visible = true;
+        baseSprite.Visible = true; // Always keep naked walking base body active!
 
         if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
         {
@@ -224,16 +154,77 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void SyncEquipmentAnimationFrames()
     {
-        // Equipment Frame Synchronization: Synchronizes equipment layers with current step frame
+        // Synchronizes equipment layers with current step frame so armor, boots & helm step in 1-to-1 sync!
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
             if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
 
-            // Apply walking step offset to equipment layers so boots and armor step in sync!
             float stepOffsetY = _isMoving ? Mathf.Abs(Mathf.Sin(_currentWalkFrame * 1.05f)) * 0.04f : 0f;
             layerSprite.Position = new Vector3(0f, 1.3f + stepOffsetY, 0f);
         }
+    }
+
+    private Texture2D LoadAndIsolateEquipmentTexture(string resPath, EquipmentSlot slot, string cacheKey)
+    {
+        if (_isolatedEquipCache.TryGetValue(cacheKey, out var cachedTex)) return cachedTex;
+
+        Texture2D rawTex = GD.Load<Texture2D>(resPath);
+        if (rawTex == null) return null!;
+
+        Image img = rawTex.GetImage();
+        if (img == null) return rawTex;
+
+        img = (Image)img.Duplicate();
+        int width = img.GetWidth();
+        int height = img.GetHeight();
+
+        for (int y = 0; y < height; y++)
+        {
+            float normY = y / (float)height;
+            for (int x = 0; x < width; x++)
+            {
+                Color pixel = img.GetPixel(x, y);
+                if (pixel.A == 0f) continue;
+
+                bool keep = false;
+                switch (slot)
+                {
+                    case EquipmentSlot.Head:
+                        // Keep head helmet region only (top 38%)
+                        if (normY <= 0.38f) keep = true;
+                        break;
+
+                    case EquipmentSlot.Chest:
+                        // Keep chest armor tunic region only (28% to 60%)
+                        if (normY >= 0.28f && normY <= 0.60f) keep = true;
+                        break;
+
+                    case EquipmentSlot.Legs:
+                        // Keep leggings region only (52% to 78%)
+                        if (normY >= 0.52f && normY <= 0.78f) keep = true;
+                        break;
+
+                    case EquipmentSlot.Boots:
+                        // Keep boots/feet region only (bottom 25%, y >= 75%)
+                        if (normY >= 0.75f) keep = true;
+                        break;
+
+                    default:
+                        keep = true;
+                        break;
+                }
+
+                if (!keep)
+                {
+                    img.SetPixel(x, y, new Color(0, 0, 0, 0)); // Crop/mask non-slot pixels!
+                }
+            }
+        }
+
+        ImageTexture isolatedTex = ImageTexture.CreateFromImage(img);
+        _isolatedEquipCache[cacheKey] = isolatedTex;
+        return isolatedTex;
     }
 
     private void RefreshAllEquipmentLayers()
@@ -253,31 +244,21 @@ public partial class GodotPaperdollVisualizer : Node3D
             }
 
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
-            bool loadedDisk = false;
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
                 string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
-                Texture2D equipTex = GD.Load<Texture2D>(resPath);
+                string cacheKey = $"{slot}_{itemId}_{_currentDirection}";
+                Texture2D equipTex = LoadAndIsolateEquipmentTexture(resPath, slot, cacheKey);
+
                 if (equipTex != null)
                 {
                     layerSprite.Texture = equipTex;
                     layerSprite.Visible = true;
-                    loadedDisk = true;
+                    continue;
                 }
             }
 
-            if (!loadedDisk)
-            {
-                if (_placeholderTextures.TryGetValue(itemId, out var placeholderTex))
-                {
-                    layerSprite.Texture = placeholderTex;
-                    layerSprite.Visible = true;
-                }
-                else
-                {
-                    layerSprite.Visible = true;
-                }
-            }
+            layerSprite.Visible = false;
         }
 
         SyncEquipmentAnimationFrames();
