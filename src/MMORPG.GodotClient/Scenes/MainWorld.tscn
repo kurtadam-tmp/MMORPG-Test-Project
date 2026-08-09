@@ -1,10 +1,11 @@
-[gd_scene load_steps=10 format=3 uid="uid://mmorpg_world_scene_2026"]
+[gd_scene load_steps=11 format=3 uid="uid://mmorpg_world_scene_2026"]
 
-[ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerVisualizer.cs" id="1_player"]
-[ext_resource type="Script" path="res://Scripts/Visuals/GodotBossVisualizer.cs" id="2_boss"]
-[ext_resource type="Script" path="res://Scripts/Visuals/GodotZonePortalVisualizer.cs" id="3_portal"]
-[ext_resource type="Script" path="res://Scripts/Network/MMORPGGodotClient.cs" id="4_net"]
-[ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="5_ui"]
+[ext_resource type="Script" path="res://Scripts/UI/MMORPGSceneAutoInitializer.cs" id="1_initializer"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerVisualizer.cs" id="2_player"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotBossVisualizer.cs" id="3_boss"]
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotZonePortalVisualizer.cs" id="4_portal"]
+[ext_resource type="Script" path="res://Scripts/Network/MMORPGGodotClient.cs" id="5_net"]
+[ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="6_ui"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.12, 0.22, 0.38, 1)
@@ -47,18 +48,21 @@ mesh = SubResource("PlaneMesh_ground")
 surface_material_override/0 = SubResource("StandardMaterial3D_ground")
 
 [node name="PlayerCharacter" type="Node3D" parent="."]
-script = ExtResource("1_player")
+script = ExtResource("2_player")
 
 [node name="WorldBoss_Ignis" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -12)
-script = ExtResource("2_boss")
+script = ExtResource("3_boss")
 
 [node name="ZonePortal_Shadowfen" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
-script = ExtResource("3_portal")
+script = ExtResource("4_portal")
 
 [node name="MMORPGGodotClient" type="Node" parent="."]
-script = ExtResource("4_net")
+script = ExtResource("5_net")
 
 [node name="MMORPGMasterUI" type="CanvasLayer" parent="."]
-script = ExtResource("5_ui")
+script = ExtResource("6_ui")
+
+[node name="SceneAutoInitializer" type="Node" parent="."]
+script = ExtResource("1_initializer")
