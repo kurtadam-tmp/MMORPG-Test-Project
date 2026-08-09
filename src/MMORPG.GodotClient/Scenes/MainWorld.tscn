@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://c8n5y4k7m9x12"]
+[gd_scene load_steps=3 format=3 uid="uid://c8n5y4k7nax12"]
 
 [ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerController.cs" id="1_player"]
 [ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="2_ui"]

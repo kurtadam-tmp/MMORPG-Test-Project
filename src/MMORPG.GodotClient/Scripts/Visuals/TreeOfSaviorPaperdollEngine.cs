@@ -17,8 +17,8 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
     private Bone2D _armLeftBone = null!;
     private Bone2D _armRightBone = null!;
 
-    // 10 Attachment Layer Sprites (Key -> Sprite2D)
-    private readonly Dictionary<string, Sprite2D> _attachmentSprites = new();
+    // 10 Geometric Placeholder Nodes (Key -> CanvasItem / Polygon2D)
+    private readonly Dictionary<string, Node2D> _attachmentNodes = new();
 
     // Equipment State: Slot -> ItemId (Default: Completely Naked)
     private readonly Dictionary<EquipmentSlot, string> _equippedItems = new()
@@ -36,42 +36,13 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
     private float _walkTimer = 0.0f;
     private const float WalkSpeed = 9.0f;
 
-    // Default Layer Draw Orders for South (Front Facing) vs North (Back Facing)
-    private static readonly Dictionary<string, int> SouthDrawOrders = new()
-    {
-        ["Shadow"]   = 0,
-        ["Cape"]     = 1,
-        ["BaseBody"] = 2,
-        ["Legs"]     = 3,
-        ["Boots"]    = 4,
-        ["Chest"]    = 5,
-        ["Hair"]     = 6,
-        ["Headwear"] = 7,
-        ["OffHand"]  = 8,
-        ["MainHand"] = 9
-    };
-
-    private static readonly Dictionary<string, int> NorthDrawOrders = new()
-    {
-        ["Shadow"]   = 0,
-        ["MainHand"] = 1,
-        ["OffHand"]  = 2,
-        ["Chest"]    = 3,
-        ["Boots"]    = 4,
-        ["Legs"]     = 5,
-        ["BaseBody"] = 6,
-        ["Headwear"] = 7,
-        ["Hair"]     = 8,
-        ["Cape"]     = 9
-    };
-
     public override void _Ready()
     {
         Instance = this;
         Build2DSkeletonTree();
-        BuildAttachmentSprites();
+        BuildGeometricPlaceholders();
         RefreshAllEquipmentLayers();
-        GD.Print("[Tree of Savior Engine] 2D Skeletal Paperdoll Engine ready!");
+        GD.Print("[Tree of Savior Engine] Procedural Geometric Placeholder Engine ready!");
     }
 
     private void Build2DSkeletonTree()
@@ -88,13 +59,13 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
         _headBone = CreateBone("HeadBone", new Vector2(0, -24));
         _chestBone.AddChild(_headBone);
 
-        _legLeftBone = CreateBone("LegLeftBone", new Vector2(-10, 16));
-        _legRightBone = CreateBone("LegRightBone", new Vector2(10, 16));
+        _legLeftBone = CreateBone("LegLeftBone", new Vector2(-12, 16));
+        _legRightBone = CreateBone("LegRightBone", new Vector2(12, 16));
         _hipsBone.AddChild(_legLeftBone);
         _hipsBone.AddChild(_legRightBone);
 
-        _armLeftBone = CreateBone("ArmLeftBone", new Vector2(-18, -10));
-        _armRightBone = CreateBone("ArmRightBone", new Vector2(18, -10));
+        _armLeftBone = CreateBone("ArmLeftBone", new Vector2(-22, -10));
+        _armRightBone = CreateBone("ArmRightBone", new Vector2(22, -10));
         _chestBone.AddChild(_armLeftBone);
         _chestBone.AddChild(_armRightBone);
     }
@@ -104,46 +75,91 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
         return new Bone2D { Name = name, Position = localPos };
     }
 
-    private void BuildAttachmentSprites()
+    private void BuildGeometricPlaceholders()
     {
-        var layers = new[] { "Shadow", "Cape", "BaseBody", "Legs", "Boots", "Chest", "Hair", "Headwear", "OffHand", "MainHand" };
+        // 1. Geometric Base Body (Head, Torso, Limbs)
+        Polygon2D headPoly = CreateCirclePolygon(new Vector2(0, 0), 16, Color.FromHtml("#ffe0bd"));
+        headPoly.Name = "BaseBody_Head";
+        _headBone.AddChild(headPoly);
 
-        Shader rawShader = GD.Load<Shader>("res://Assets/Shaders/TreeOfSaviorShader.gdshader");
-        ShaderMaterial? shaderMaterial = rawShader != null ? new ShaderMaterial { Shader = rawShader } : null;
+        Polygon2D chestPoly = CreateRectPolygon(new Vector2(-16, -16), new Vector2(32, 32), Color.FromHtml("#ffd8b3"));
+        chestPoly.Name = "BaseBody_Chest";
+        _chestBone.AddChild(chestPoly);
 
-        foreach (string layerKey in layers)
+        Polygon2D legLeftPoly = CreateRectPolygon(new Vector2(-5, 0), new Vector2(10, 24), Color.FromHtml("#ffcc99"));
+        _legLeftBone.AddChild(legLeftPoly);
+
+        Polygon2D legRightPoly = CreateRectPolygon(new Vector2(-5, 0), new Vector2(10, 24), Color.FromHtml("#ffcc99"));
+        _legRightBone.AddChild(legRightPoly);
+
+        Polygon2D armLeftPoly = CreateRectPolygon(new Vector2(-4, 0), new Vector2(8, 20), Color.FromHtml("#ffcc99"));
+        _armLeftBone.AddChild(armLeftPoly);
+
+        Polygon2D armRightPoly = CreateRectPolygon(new Vector2(-4, 0), new Vector2(8, 20), Color.FromHtml("#ffcc99"));
+        _armRightBone.AddChild(armRightPoly);
+
+        // 2. Equipment Slots Geometric Overlays
+        Node2D chestEquipNode = CreateRectPolygon(new Vector2(-18, -18), new Vector2(36, 36), Color.FromHtml("#4682b4"));
+        chestEquipNode.Name = "Equip_Chest";
+        chestEquipNode.Visible = false;
+        _chestBone.AddChild(chestEquipNode);
+        _attachmentNodes["Chest"] = chestEquipNode;
+
+        Node2D headEquipNode = CreateCirclePolygon(new Vector2(0, -4), 19, Color.FromHtml("#708090"));
+        headEquipNode.Name = "Equip_Head";
+        headEquipNode.Visible = false;
+        _headBone.AddChild(headEquipNode);
+        _attachmentNodes["Head"] = headEquipNode;
+
+        Node2D mainHandEquipNode = CreateRectPolygon(new Vector2(-3, -25), new Vector2(6, 40), Color.FromHtml("#ffd700"));
+        mainHandEquipNode.Name = "Equip_MainHand";
+        mainHandEquipNode.Visible = false;
+        _armRightBone.AddChild(mainHandEquipNode);
+        _attachmentNodes["MainHand"] = mainHandEquipNode;
+
+        Node2D offHandEquipNode = CreateRectPolygon(new Vector2(-12, -12), new Vector2(24, 24), Color.FromHtml("#c0c0c0"));
+        offHandEquipNode.Name = "Equip_OffHand";
+        offHandEquipNode.Visible = false;
+        _armLeftBone.AddChild(offHandEquipNode);
+        _attachmentNodes["OffHand"] = offHandEquipNode;
+
+        Node2D bootsEquipNodeLeft = CreateRectPolygon(new Vector2(-6, 16), new Vector2(12, 10), Color.FromHtml("#8b4513"));
+        bootsEquipNodeLeft.Name = "Equip_Boots";
+        bootsEquipNodeLeft.Visible = false;
+        _legLeftBone.AddChild(bootsEquipNodeLeft);
+        _attachmentNodes["Boots"] = bootsEquipNodeLeft;
+    }
+
+    private Polygon2D CreateRectPolygon(Vector2 topLeft, Vector2 size, Color col)
+    {
+        return new Polygon2D
         {
-            Sprite2D sprite = new Sprite2D
+            Polygon = new Vector2[]
             {
-                Name = $"Attachment_{layerKey}",
-                Material = shaderMaterial
-            };
+                topLeft,
+                new Vector2(topLeft.X + size.X, topLeft.Y),
+                new Vector2(topLeft.X + size.X, topLeft.Y + size.Y),
+                new Vector2(topLeft.X, topLeft.Y + size.Y)
+            },
+            Color = col
+        };
+    }
 
-            switch (layerKey)
-            {
-                case "Headwear":
-                case "Hair":
-                    _headBone.AddChild(sprite);
-                    break;
-                case "Chest":
-                case "Cape":
-                    _chestBone.AddChild(sprite);
-                    break;
-                case "MainHand":
-                    _armRightBone.AddChild(sprite);
-                    break;
-                case "OffHand":
-                    _armLeftBone.AddChild(sprite);
-                    break;
-                default:
-                    _hipsBone.AddChild(sprite);
-                    break;
-            }
-
-            _attachmentSprites[layerKey] = sprite;
+    private Polygon2D CreateCirclePolygon(Vector2 center, float radius, Color col)
+    {
+        const int numSegments = 16;
+        Vector2[] points = new Vector2[numSegments];
+        for (int i = 0; i < numSegments; i++)
+        {
+            float angle = i * Mathf.Tau / numSegments;
+            points[i] = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
         }
 
-        UpdateDrawOrders();
+        return new Polygon2D
+        {
+            Polygon = points,
+            Color = col
+        };
     }
 
     public override void _PhysicsProcess(double delta)
@@ -153,11 +169,11 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
             _walkTimer += (float)delta * WalkSpeed;
 
             // 2D Skeletal Procedural Walk Animation (Sine Wave Gait)
-            float legSwingLeft = Mathf.Sin(_walkTimer) * 0.35f;
-            float legSwingRight = Mathf.Sin(_walkTimer + Mathf.Pi) * 0.35f;
-            float armSwingLeft = Mathf.Sin(_walkTimer + Mathf.Pi) * 0.25f;
-            float armSwingRight = Mathf.Sin(_walkTimer) * 0.25f;
-            float hipsBobY = Mathf.Abs(Mathf.Sin(_walkTimer * 2f)) * 3f;
+            float legSwingLeft = Mathf.Sin(_walkTimer) * 0.45f;
+            float legSwingRight = Mathf.Sin(_walkTimer + Mathf.Pi) * 0.45f;
+            float armSwingLeft = Mathf.Sin(_walkTimer + Mathf.Pi) * 0.35f;
+            float armSwingRight = Mathf.Sin(_walkTimer) * 0.35f;
+            float hipsBobY = Mathf.Abs(Mathf.Sin(_walkTimer * 2f)) * 4f;
 
             _legLeftBone.Rotation = legSwingLeft;
             _legRightBone.Rotation = legSwingRight;
@@ -185,78 +201,38 @@ public partial class TreeOfSaviorPaperdollEngine : Node2D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[Tree of Savior Engine] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Geometric Paperdoll] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[Tree of Savior Engine] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Geometric Paperdoll] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
     {
         if (_currentDirection == direction) return;
         _currentDirection = direction;
-        UpdateDrawOrders();
         RefreshAllEquipmentLayers();
-    }
-
-    private void UpdateDrawOrders()
-    {
-        bool isFacingNorth = _currentDirection.Contains("north");
-        var orders = isFacingNorth ? NorthDrawOrders : SouthDrawOrders;
-
-        foreach (var (layerKey, sprite) in _attachmentSprites)
-        {
-            if (orders.TryGetValue(layerKey, out int zOrder))
-            {
-                sprite.ZIndex = zOrder;
-            }
-        }
     }
 
     public void RefreshAllEquipmentLayers()
     {
-        // Load Base Body for Current Direction
-        if (_attachmentSprites.TryGetValue("BaseBody", out var bodySprite))
-        {
-            Texture2D bodyTex = GD.Load<Texture2D>($"res://Assets/Textures/BaseBody/Idle/{_currentDirection}.png");
-            if (bodyTex != null)
-            {
-                bodySprite.Texture = bodyTex;
-                bodySprite.Visible = true;
-            }
-        }
-
-        // Refresh Equipment Overlay Attachments
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
-            if (!_attachmentSprites.TryGetValue(layerKey, out var layerSprite)) continue;
+            if (!_attachmentNodes.TryGetValue(layerKey, out var layerNode)) continue;
 
             if (itemId == "None" || string.IsNullOrWhiteSpace(itemId))
             {
-                layerSprite.Visible = false;
-                continue;
+                layerNode.Visible = false;
             }
-
-            PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
-            if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
+            else
             {
-                string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
-                Texture2D equipTex = GD.Load<Texture2D>(resPath);
-
-                if (equipTex != null)
-                {
-                    layerSprite.Texture = equipTex;
-                    layerSprite.Visible = true;
-                    continue;
-                }
+                layerNode.Visible = true;
             }
-
-            layerSprite.Visible = false;
         }
     }
 }
