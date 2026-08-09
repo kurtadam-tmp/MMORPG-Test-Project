@@ -1,4 +1,7 @@
-[gd_scene format=3 uid="uid://c8n5y4k7m9x12"]
+[gd_scene load_steps=3 format=3 uid="uid://c8n5y4k7m9x12"]
+
+[ext_resource type="Script" path="res://Scripts/Visuals/GodotPlayerController.cs" id="1_player"]
+[ext_resource type="Script" path="res://Scripts/UI/MMORPGMasterGodotUI.cs" id="2_ui"]
 
 [node name="MainWorld" type="Node3D"]
 
@@ -10,4 +13,8 @@ shadow_enabled = true
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 8, 12)
 current = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="GodotPlayerController" type="CharacterBody3D" parent="."]
+script = ExtResource("1_player")
+
+[node name="MMORPGMasterGodotUI" type="CanvasLayer" parent="."]
+script = ExtResource("2_ui")
