@@ -34,6 +34,12 @@ public partial class GodotPaperdollVisualizer : Node3D
     private readonly Dictionary<string, Texture2D[]> _baseWalkTextures = new();
     private readonly Dictionary<string, Texture2D> _baseIdleTextures = new();
 
+    // Preloaded Equipment Animation Textures: Slot -> Direction -> FrameIndex -> Texture
+    private readonly Dictionary<EquipmentSlot, Dictionary<string, Texture2D[]>> _equipWalkTextures = new();
+    private readonly Dictionary<EquipmentSlot, Dictionary<string, Texture2D>> _equipIdleTextures = new();
+
+    private static readonly string[] Directions = new string[] { "south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west" };
+
     public override void _Ready()
     {
         Instance = this;
@@ -56,9 +62,7 @@ public partial class GodotPaperdollVisualizer : Node3D
 
     private void LoadBaseBodyTextures()
     {
-        string[] dirs = new string[] { "south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west" };
-
-        foreach (string d in dirs)
+        foreach (string d in Directions)
         {
             Texture2D idleTex = GD.Load<Texture2D>($"res://Assets/Textures/BaseBody/Idle/{d}.png");
             if (idleTex != null) _baseIdleTextures[d] = idleTex;
@@ -94,16 +98,14 @@ public partial class GodotPaperdollVisualizer : Node3D
             {
                 _frameTimer = 0.0f;
                 _currentWalkFrame = (_currentWalkFrame + 1) % TotalWalkFrames;
-                UpdateBaseBodyFrame();
-                SyncEquipmentAnimationFrames();
+                UpdateAllFrameTextures();
             }
         }
         else
         {
             _currentWalkFrame = 0;
             _frameTimer = 0.0f;
-            UpdateBaseBodyFrame();
-            SyncEquipmentAnimationFrames();
+            UpdateAllFrameTextures();
         }
     }
 
@@ -113,22 +115,24 @@ public partial class GodotPaperdollVisualizer : Node3D
         _isMoving = isMoving;
         _currentWalkFrame = 0;
         _frameTimer = 0.0f;
-        UpdateBaseBodyFrame();
-        SyncEquipmentAnimationFrames();
+        UpdateAllFrameTextures();
     }
 
     public void EquipItem(EquipmentSlot slot, string itemId)
     {
         _equippedItems[slot] = itemId;
+        PreloadEquippedItemTextures(slot, itemId);
         RefreshAllEquipmentLayers();
-        GD.Print($"[Native LPC Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[Animated Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
+        _equipIdleTextures.Remove(slot);
+        _equipWalkTextures.Remove(slot);
         RefreshAllEquipmentLayers();
-        GD.Print($"[Native LPC Paperdoll Engine] Unequipped item from '{slot}' slot!");
+        GD.Print($"[Animated Paperdoll Engine] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
@@ -138,39 +142,57 @@ public partial class GodotPaperdollVisualizer : Node3D
         RefreshAllEquipmentLayers();
     }
 
-    private void UpdateBaseBodyFrame()
+    private void PreloadEquippedItemTextures(EquipmentSlot slot, string itemId)
     {
-        if (!_layers.TryGetValue("BaseBody", out var baseSprite)) return;
-
-        baseSprite.Visible = true;
-
-        if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
+        if (itemId == "None" || string.IsNullOrWhiteSpace(itemId))
         {
-            baseSprite.Texture = frames[_currentWalkFrame];
+            _equipIdleTextures.Remove(slot);
+            _equipWalkTextures.Remove(slot);
+            return;
         }
-        else if (_baseIdleTextures.TryGetValue(_currentDirection, out var idleTex) && idleTex != null)
+
+        string slotName = slot.ToString();
+        if (slot == EquipmentSlot.Chest) slotName = "Armor";
+        if (slot == EquipmentSlot.MainHand) slotName = "Weapons";
+
+        var idleMap = new Dictionary<string, Texture2D>();
+        var walkMap = new Dictionary<string, Texture2D[]>();
+
+        foreach (string d in Directions)
         {
-            baseSprite.Texture = idleTex;
+            Texture2D idleTex = GD.Load<Texture2D>($"res://Assets/Textures/Paperdoll/{slotName}/{itemId}/Idle/{d}.png");
+            if (idleTex != null) idleMap[d] = idleTex;
+
+            Texture2D[] walkFrames = new Texture2D[TotalWalkFrames];
+            for (int f = 0; f < TotalWalkFrames; f++)
+            {
+                Texture2D frameTex = GD.Load<Texture2D>($"res://Assets/Textures/Paperdoll/{slotName}/{itemId}/Walking/{d}/frame_00{f}.png");
+                if (frameTex != null) walkFrames[f] = frameTex;
+            }
+            walkMap[d] = walkFrames;
         }
+
+        _equipIdleTextures[slot] = idleMap;
+        _equipWalkTextures[slot] = walkMap;
     }
 
-    private void SyncEquipmentAnimationFrames()
+    private void UpdateAllFrameTextures()
     {
-        // Native 64x64px LPC Engine: Base body and equipment move in 1-to-1 lockstep
-        foreach (var (slot, itemId) in _equippedItems)
+        // 1. Update Base Body Frame
+        if (_layers.TryGetValue("BaseBody", out var baseSprite))
         {
-            string layerKey = slot.ToString();
-            if (!_layers.TryGetValue(layerKey, out var layerSprite) || !layerSprite.Visible) continue;
-
-            layerSprite.Position = new Vector3(0f, 1.30f, 0f);
+            baseSprite.Visible = true;
+            if (_isMoving && _baseWalkTextures.TryGetValue(_currentDirection, out var bodyWalk) && bodyWalk[_currentWalkFrame] != null)
+            {
+                baseSprite.Texture = bodyWalk[_currentWalkFrame];
+            }
+            else if (_baseIdleTextures.TryGetValue(_currentDirection, out var bodyIdle) && bodyIdle != null)
+            {
+                baseSprite.Texture = bodyIdle;
+            }
         }
-    }
 
-    private void RefreshAllEquipmentLayers()
-    {
-        UpdateBaseBodyFrame();
-
-        // Refresh Modular 8-Directional Equipment Overlay Layers
+        // 2. Update Equipment Frames in 1-to-1 Lockstep Frame Sync
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
@@ -182,23 +204,33 @@ public partial class GodotPaperdollVisualizer : Node3D
                 continue;
             }
 
-            PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
-            if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
+            if (_isMoving && _equipWalkTextures.TryGetValue(slot, out var walkMap) && walkMap.TryGetValue(_currentDirection, out var frames) && frames[_currentWalkFrame] != null)
             {
-                string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
-                Texture2D equipTex = GD.Load<Texture2D>(resPath);
-
-                if (equipTex != null)
-                {
-                    layerSprite.Texture = equipTex;
-                    layerSprite.Visible = true;
-                    continue;
-                }
+                layerSprite.Texture = frames[_currentWalkFrame];
+                layerSprite.Visible = true;
             }
+            else if (_equipIdleTextures.TryGetValue(slot, out var idleMap) && idleMap.TryGetValue(_currentDirection, out var idleTex) && idleTex != null)
+            {
+                layerSprite.Texture = idleTex;
+                layerSprite.Visible = true;
+            }
+            else
+            {
+                layerSprite.Visible = false;
+            }
+        }
+    }
 
-            layerSprite.Visible = false;
+    private void RefreshAllEquipmentLayers()
+    {
+        foreach (var (slot, itemId) in _equippedItems)
+        {
+            if (itemId != "None" && !_equipWalkTextures.ContainsKey(slot))
+            {
+                PreloadEquippedItemTextures(slot, itemId);
+            }
         }
 
-        SyncEquipmentAnimationFrames();
+        UpdateAllFrameTextures();
     }
 }

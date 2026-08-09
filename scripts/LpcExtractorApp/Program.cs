@@ -22,7 +22,7 @@ class Program
         string clientRoot = @"C:\Projects\Antigravity\MMORPG-Test-Project\src\MMORPG.GodotClient\Assets\Textures";
         string lpcRoot = @"C:\Projects\Antigravity\tools\lpc_generator\spritesheets";
 
-        Console.WriteLine("[LPC Exporter] Extracting clean single-body 8-directional sprite sets...");
+        Console.WriteLine("[LPC Exporter] Extracting 6-Frame Walk Cycles for Base Body & ALL 5 Equipment Sets...");
 
         // 1. Extract Complete Composite LPC Base Body (Body Torso + Human Head)
         string bodyWalkSheet = Path.Combine(lpcRoot, @"body\bodies\male\walk.png");
@@ -40,7 +40,7 @@ class Program
             ExtractCompositeBaseBodyIdleFrames(bodyIdleSheet, headIdleSheet, Path.Combine(clientRoot, "BaseBody/Idle"));
         }
 
-        // 2. Extract 5 Equipment Sets into Paperdoll Folder
+        // 2. Extract 5 Animated Equipment Sets into Paperdoll Folder (Idle + 6 Walk Frames)
         var itemsToExtract = new Dictionary<string, string>
         {
             ["Head/IronHelm"] = Path.Combine(lpcRoot, @"hat\helmet\barbuta\male\walk.png"),
@@ -60,10 +60,10 @@ class Program
 
             string outFolder = Path.Combine(clientRoot, "Paperdoll", itemRelativePath);
             Directory.CreateDirectory(outFolder);
-            Extract8DirectionalEquipment(sheetPath, outFolder, itemRelativePath);
+            ExtractAnimatedEquipment(sheetPath, outFolder, itemRelativePath);
         }
 
-        Console.WriteLine("[LPC Exporter] CLEAN SINGLE-BODY EXTRACTIONS COMPLETED!");
+        Console.WriteLine("[LPC Exporter] ALL ANIMATED EXTRACTIONS COMPLETED SUCCESSFULLY!");
     }
 
     private static void ExtractCompositeBaseBodyWalkFrames(string bodySheetPath, string headSheetPath, string outBaseFolder)
@@ -97,7 +97,6 @@ class Program
             }
         }
 
-        // Map Diagonal Base Body directions directly to nearest clean 1-body angle (NO double-blending!)
         CopyDirWalkFrames(outBaseFolder, "east", "south-east");
         CopyDirWalkFrames(outBaseFolder, "east", "north-east");
         CopyDirWalkFrames(outBaseFolder, "west", "north-west");
@@ -137,8 +136,14 @@ class Program
         CopySingleFile(outBaseFolder, "west.png", "south-west.png");
     }
 
-    private static void Extract8DirectionalEquipment(string sheetPath, string outFolder, string itemKey)
+    private static void ExtractAnimatedEquipment(string sheetPath, string outFolder, string itemKey)
     {
+        string idleFolder = Path.Combine(outFolder, "Idle");
+        string walkFolder = Path.Combine(outFolder, "Walking");
+
+        Directory.CreateDirectory(idleFolder);
+        Directory.CreateDirectory(walkFolder);
+
         using (Bitmap fullSheet = new Bitmap(sheetPath))
         {
             foreach (var (dirName, startY) in WalkRowY)
@@ -146,26 +151,53 @@ class Program
                 int y = startY;
                 if (y + FrameSize > fullSheet.Height) y = 0;
 
-                Rectangle cropRect = new Rectangle(0, y, FrameSize, FrameSize);
-                using (Bitmap frameImg = new Bitmap(FrameSize, FrameSize, PixelFormat.Format32bppArgb))
+                // 1. Idle Frame (Frame 0)
+                Rectangle idleCrop = new Rectangle(0, y, FrameSize, FrameSize);
+                using (Bitmap idleImg = new Bitmap(FrameSize, FrameSize, PixelFormat.Format32bppArgb))
                 {
-                    using (Graphics g = Graphics.FromImage(frameImg))
+                    using (Graphics g = Graphics.FromImage(idleImg))
                     {
-                        g.DrawImage(fullSheet, new Rectangle(0, 0, FrameSize, FrameSize), cropRect, GraphicsUnit.Pixel);
+                        g.DrawImage(fullSheet, new Rectangle(0, 0, FrameSize, FrameSize), idleCrop, GraphicsUnit.Pixel);
                     }
 
-                    string framePath = Path.Combine(outFolder, $"{dirName}.png");
-                    frameImg.Save(framePath, ImageFormat.Png);
+                    string idlePath = Path.Combine(idleFolder, $"{dirName}.png");
+                    idleImg.Save(idlePath, ImageFormat.Png);
+                }
+
+                // 2. 6 Walk Animation Frames
+                string dirWalkFolder = Path.Combine(walkFolder, dirName);
+                Directory.CreateDirectory(dirWalkFolder);
+
+                for (int f = 0; f < 6; f++)
+                {
+                    Rectangle walkCrop = new Rectangle(f * FrameSize, y, FrameSize, FrameSize);
+                    using (Bitmap walkImg = new Bitmap(FrameSize, FrameSize, PixelFormat.Format32bppArgb))
+                    {
+                        using (Graphics g = Graphics.FromImage(walkImg))
+                        {
+                            g.DrawImage(fullSheet, new Rectangle(0, 0, FrameSize, FrameSize), walkCrop, GraphicsUnit.Pixel);
+                        }
+
+                        string framePath = Path.Combine(dirWalkFolder, $"frame_00{f}.png");
+                        walkImg.Save(framePath, ImageFormat.Png);
+                    }
                 }
             }
         }
 
-        CopySingleFile(outFolder, "east.png", "south-east.png");
-        CopySingleFile(outFolder, "east.png", "north-east.png");
-        CopySingleFile(outFolder, "west.png", "north-west.png");
-        CopySingleFile(outFolder, "west.png", "south-west.png");
+        // Copy Diagonals for Idle
+        CopySingleFile(idleFolder, "east.png", "south-east.png");
+        CopySingleFile(idleFolder, "east.png", "north-east.png");
+        CopySingleFile(idleFolder, "west.png", "north-west.png");
+        CopySingleFile(idleFolder, "west.png", "south-west.png");
 
-        Console.WriteLine($"[SUCCESS] Exported 8-directional set for '{itemKey}'");
+        // Copy Diagonals for Walk
+        CopyDirWalkFrames(walkFolder, "east", "south-east");
+        CopyDirWalkFrames(walkFolder, "east", "north-east");
+        CopyDirWalkFrames(walkFolder, "west", "north-west");
+        CopyDirWalkFrames(walkFolder, "west", "south-west");
+
+        Console.WriteLine($"[SUCCESS] Exported 6-frame animated walk cycle for '{itemKey}'");
     }
 
     private static void CopyDirWalkFrames(string outBaseFolder, string srcDir, string targetDir)
