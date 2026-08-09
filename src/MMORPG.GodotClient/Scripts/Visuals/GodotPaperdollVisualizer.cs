@@ -10,12 +10,12 @@ public partial class GodotPaperdollVisualizer : Node3D
     // 10 Modular Paperdoll Sprite3D Layers ordered by Z-Depth
     private readonly Dictionary<string, Sprite3D> _layers = new();
 
-    // Equipment State Storage: Slot -> ItemId (Default: Completely Naked)
+    // Equipment State Storage: Slot -> ItemId
     private readonly Dictionary<EquipmentSlot, string> _equippedItems = new()
     {
         [EquipmentSlot.Head] = "None",
         [EquipmentSlot.Chest] = "None",
-        [EquipmentSlot.Legs] = "None",
+        [EquipmentSlot.Legs] = "IronLeggings",
         [EquipmentSlot.Boots] = "None",
         [EquipmentSlot.MainHand] = "None",
         [EquipmentSlot.OffHand] = "None"
@@ -48,6 +48,9 @@ public partial class GodotPaperdollVisualizer : Node3D
     public override void _Ready()
     {
         Instance = this;
+
+        // Process 8-directional IronLeggings sprite sheet from parent LPC library
+        ExtractLpcLeggings8Dir.ProcessIronLeggings8Dir();
 
         // Initialize 10 Modular Layers with PixelSize offsets for clean Z-sorting
         CreateLayerNode("Shadow", 0.0210f);
@@ -131,14 +134,14 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         _equippedItems[slot] = itemId;
         RefreshAllEquipmentLayers();
-        GD.Print($"[Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
+        GD.Print($"[8-Directional Paperdoll Engine] Equipped '{itemId}' into '{slot}' slot!");
     }
 
     public void UnequipItem(EquipmentSlot slot)
     {
         _equippedItems[slot] = "None";
         RefreshAllEquipmentLayers();
-        GD.Print($"[Paperdoll Engine] Unequipped item from '{slot}' slot!");
+        GD.Print($"[8-Directional Paperdoll Engine] Unequipped item from '{slot}' slot!");
     }
 
     public void UpdateDirection(string direction)
@@ -189,7 +192,7 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         UpdateBaseBodyFrame();
 
-        // Refresh Modular Equipment Overlay Layers
+        // Refresh Modular 8-Directional Equipment Overlay Layers
         foreach (var (slot, itemId) in _equippedItems)
         {
             string layerKey = slot.ToString();
@@ -204,6 +207,7 @@ public partial class GodotPaperdollVisualizer : Node3D
             PaperdollLayerInfo? info = PaperdollRegistry.GetLayerInfo(itemId);
             if (info != null && !string.IsNullOrWhiteSpace(info.TextureResourcePattern))
             {
+                // Explicit 8-Directional Texture Pattern Resolution
                 string resPath = info.TextureResourcePattern.Replace("{dir}", _currentDirection);
                 Texture2D equipTex = GD.Load<Texture2D>(resPath);
 
