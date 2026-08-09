@@ -139,7 +139,7 @@ public partial class GodotPaperdollVisualizer : Node3D
     {
         if (_currentDirection == direction) return;
         _currentDirection = direction;
-        RefreshAllEquipmentLayers();
+        UpdateAllFrameTextures();
     }
 
     private void PreloadEquippedItemTextures(EquipmentSlot slot, string itemId)
