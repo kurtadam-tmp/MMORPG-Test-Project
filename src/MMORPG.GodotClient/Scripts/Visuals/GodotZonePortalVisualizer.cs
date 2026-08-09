@@ -6,24 +6,27 @@ public partial class GodotZonePortalVisualizer : Node3D
     [Export] public int TargetZoneId = 2;
     [Export] public int RequiredLevel = 10;
 
-    private MeshInstance3D _portalRingMesh = null!;
+    private Sprite3D _portalSprite = null!;
 
     public override void _Ready()
     {
         GlobalPosition = new Vector3(0f, 0f, -8f);
 
-        // Build Portal Ring Mesh
-        _portalRingMesh = new MeshInstance3D();
-        _portalRingMesh.Mesh = new QuadMesh { Size = new Vector2(3f, 3f) };
-        _portalRingMesh.RotationDegrees = new Vector3(-90f, 0f, 0f);
-        _portalRingMesh.Position = new Vector3(0f, 0.05f, 0f);
+        // Build Portal Sprite3D
+        _portalSprite = new Sprite3D();
+        _portalSprite.Texture = GD.Load<Texture2D>("res://Assets/Textures/zone_portal.jpg");
+        _portalSprite.PixelSize = 0.012f;
+        _portalSprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
+        _portalSprite.Position = new Vector3(0f, 2.0f, 0f);
+        AddChild(_portalSprite);
 
-        StandardMaterial3D mat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0f, 0.9f, 1f, 0.7f),
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha
-        };
-        _portalRingMesh.MaterialOverride = mat;
-        AddChild(_portalRingMesh);
+        // Overhead Portal Label
+        Label3D portalTag = new Label3D();
+        portalTag.Text = "🌀 Zone Portal: Shadowfen Swamps (Lvl 10+)";
+        portalTag.Position = new Vector3(0f, 4.2f, 0f);
+        portalTag.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
+        portalTag.Modulate = new Color(0f, 0.9f, 1f);
+        portalTag.FontSize = 24;
+        AddChild(portalTag);
     }
 }
